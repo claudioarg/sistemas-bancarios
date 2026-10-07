@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistemas Bancarios y Teoría Monetaria - Compendio Académico</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- MathJax for rendering LaTeX math formulas -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header / Navigation Bar -->
+  <header class="bg-indigo-900 text-white shadow-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo / Brand -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('tab-matriz')">
+          <div class="w-12 h-12 bg-amber-400 rounded-xl flex items-center justify-center text-indigo-950 font-black text-2xl shadow-lg transform hover:scale-105 transition-transform">
+            <i class="fa-solid fa-landmark"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              Sistemas Bancarios y Teoría Monetaria
+              <span class="text-xs bg-amber-400 text-indigo-950 font-extrabold px-2 py-0.5 rounded-full uppercase">13 Textos</span>
+            </h1>
+            <p class="text-xs text-indigo-200">Compendio Doctrinal, Matriz Comparativa y Resúmenes Críticos</p>
+          </div>
+        </div>
+
+        <!-- Desktop Navigation Tabs -->
+        <nav class="hidden md:flex space-x-1">
+          <button onclick="switchTab('tab-matriz')" id="nav-tab-matriz" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-800 text-amber-300 shadow">
+            <i class="fa-solid fa-table-cells"></i> Cuadro Comparativo
+          </button>
+          <button onclick="switchTab('tab-filtro')" id="nav-tab-filtro" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
+            <i class="fa-solid fa-sliders"></i> Filtrar (Autor / Tema)
+          </button>
+          <button onclick="switchTab('tab-economistas')" id="nav-tab-economistas" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
+            <i class="fa-solid fa-user-tie"></i> Por Economista y Época
+          </button>
+          <button onclick="switchTab('tab-textos')" id="nav-tab-textos" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
+            <i class="fa-solid fa-book-open"></i> Resumen de Textos (13)
+          </button>
+          <button onclick="switchTab('tab-largos')" id="nav-tab-largos" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
+            <i class="fa-solid fa-filter"></i> Textos &gt;40 Págs
+          </button>
+          <button onclick="switchTab('tab-render')" id="nav-tab-render" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-500 shadow">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Render
+          </button>
+        </nav>
+
+        <!-- Search Bar Quick Trigger -->
+        <div class="flex items-center space-x-3">
+          <button onclick="toggleQuickSearch()" class="p-2.5 rounded-lg bg-indigo-800 text-indigo-200 hover:text-white hover:bg-indigo-700 transition" title="Búsqueda rápida">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+          <button onclick="window.print()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-800 text-xs font-semibold text-indigo-200 hover:bg-indigo-700 transition" title="Imprimir o Exportar PDF">
+            <i class="fa-solid fa-print"></i> Imprimir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Bar -->
+    <div class="md:hidden bg-indigo-950 border-t border-indigo-800 px-3 py-2 flex justify-around overflow-x-auto text-xs font-medium">
+      <button onclick="switchTab('tab-matriz')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap">Cuadro</button>
+      <button onclick="switchTab('tab-filtro')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap">Filtrar</button>
+      <button onclick="switchTab('tab-economistas')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">Autores</button>
+      <button onclick="switchTab('tab-textos')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">13 Textos</button>
+      <button onclick="switchTab('tab-largos')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">&gt;40 Págs</button>
+      <button onclick="switchTab('tab-render')" class="px-2 py-1.5 rounded text-emerald-400 font-bold whitespace-nowrap">Render</button>
+    </div>
+  </header>
+
+  <!-- Quick Global Search Bar Banner (Collapsible) -->
+  <div id="quickSearchBanner" class="bg-amber-100 border-b border-amber-300 p-3 shadow-inner hidden">
+    <div class="max-w-5xl mx-auto flex items-center gap-3">
+      <i class="fa-solid fa-magnifying-glass text-amber-700 text-lg"></i>
+      <input type="text" id="globalSearchInput" placeholder="Buscar por economista (ej: Friedman, Keynes, Tooke), tema (ej: inflación, encajes, señoreaje) o concepto..." 
+             class="flex-1 bg-white border border-amber-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+             oninput="handleGlobalSearch(this.value)">
+      <button onclick="toggleQuickSearch()" class="text-amber-800 hover:text-amber-950 px-2 py-1 text-sm font-bold">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div id="quickSearchResults" class="max-w-5xl mx-auto mt-2 text-xs text-slate-700 hidden"></div>
+  </div>
+
+  <!-- Hero / Introduction Banner -->
+  <section class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white py-8 px-4 border-b border-indigo-700">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="max-w-3xl">
+        <span class="inline-flex items-center gap-1.5 bg-indigo-700/60 text-amber-300 text-xs font-semibold px-3 py-1 rounded-full border border-indigo-500/50 mb-3">
+          <i class="fa-solid fa-graduation-cap"></i> Cátedra de Sistemas Bancarios y Crediticios
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          La Disputa por el Dinero, el Crédito y la Inflación
+        </h2>
+        <p class="mt-2 text-indigo-200 text-sm leading-relaxed">
+          Sistematización de los 13 textos del programa. Incluye la matriz cruzada de <strong>13 Economistas/Escuelas</strong> frente a <strong>8 Ejes Temáticos</strong>, los resúmenes exhaustivos de cada obra, el filtro crítico de textos de más de 40 páginas y la guía de publicación en Render.
+        </p>
+      </div>
+      <!-- Stats Quick Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-700/50 backdrop-blur">
+          <div class="text-2xl font-black text-amber-400">13</div>
+          <div class="text-xs text-indigo-200 font-medium">Textos Analizados</div>
+        </div>
+        <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-700/50 backdrop-blur">
+          <div class="text-2xl font-black text-emerald-400">13</div>
+          <div class="text-xs text-indigo-200 font-medium">Economistas / Escuelas</div>
+        </div>
+        <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-700/50 backdrop-blur">
+          <div class="text-2xl font-black text-sky-400">8</div>
+          <div class="text-xs text-indigo-200 font-medium">Ejes Temáticos</div>
+        </div>
+        <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-700/50 backdrop-blur">
+          <div class="text-2xl font-black text-pink-400">104</div>
+          <div class="text-xs text-indigo-200 font-medium">Celdas de Cruce</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Container with Tabs -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: CUADRO COMPARATIVO (MATRIZ INTERACTIVA) -->
+    <!-- ========================================== -->
+    <div id="tab-matriz" class="tab-content">
+      <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-6">
+        <!-- Controls & Filters for Matrix -->
+        <div class="p-5 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-table-cells-large text-indigo-600"></i>
+              Cuadro Comparativo Transversal: Economista vs Tema
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">
+              Visualiza con precisión qué sostuvo cada autor por tema o si <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">[No aborda el tema puntualmente]</span>. Haz clic en cualquier celda para expandir la lectura.
+            </p>
+          </div>
+
+          <!-- Filter Controls -->
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="matrixFilterTopic" onchange="renderMatrix()" class="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="all">Todos los Temas (8)</option>
+              <!-- Will be populated dynamically -->
+            </select>
+            <select id="matrixFilterEconomist" onchange="renderMatrix()" class="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="all">Todos los Economistas (13)</option>
+              <!-- Will be populated dynamically -->
+            </select>
+            <button onclick="toggleMatrixView()" id="btnToggleAxis" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5" title="Invertir filas y columnas">
+              <i class="fa-solid fa-repeat"></i> Invertir Ejes
+            </button>
+          </div>
+        </div>
+
+        <!-- Matrix Table Container -->
+        <div class="overflow-x-auto max-h-[750px] overflow-y-auto relative border-t border-slate-200">
+          <table class="w-full text-left border-collapse text-xs" id="comparativeTable">
+            <!-- Rendered by JS -->
+          </table>
+        </div>
+
+        <!-- Matrix Footer Info -->
+        <div class="p-4 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+          <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Aborda el tema en profundidad</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-300 inline-block"></span> No lo aborda puntualmente en el texto</span>
+          </div>
+          <div>
+            Tip: Pasa el cursor o presiona una celda para leer la síntesis completa y sus textos fuente.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB NUEVA: FILTRAR POR ECONOMISTA O TEMA -->
+    <!-- ========================================== -->
+    <div id="tab-filtro" class="tab-content hidden">
+      <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-6">
+        <!-- Switcher Header -->
+        <div class="p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs bg-indigo-100 text-indigo-800 font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <i class="fa-solid fa-sliders"></i> Explorador Cruzado
+              </span>
+              <span class="text-xs text-slate-500 font-medium">Búsqueda Rápida e Inteligente</span>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">
+              Filtrar por Economista o por Eje Temático
+            </h3>
+            <p class="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
+              Selecciona un <strong>Economista</strong> para ver en detalle de qué habla y de qué temas no habló, o selecciona un <strong>Tema</strong> para ver quiénes debaten sobre él, qué sostiene cada uno y quiénes no lo abordan.
+            </p>
+          </div>
+
+          <!-- Mode Selector Pill Switch -->
+          <div class="inline-flex rounded-xl bg-slate-200/80 p-1 border border-slate-300/80 flex-shrink-0 self-start md:self-auto">
+            <button id="btnFilterModeEcon" onclick="setFilterMode('economist')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-indigo-900 text-amber-300 shadow flex items-center gap-1.5">
+              <i class="fa-solid fa-user-tie"></i> Por Economista (¿De qué habla?)
+            </button>
+            <button id="btnFilterModeTopic" onclick="setFilterMode('topic')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-700 hover:text-slate-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-tags"></i> Por Tema (¿Quiénes hablan de eso?)
+            </button>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <!-- SUB-VIEW 1: FILTRAR POR ECONOMISTA -->
+          <div id="filterSectionEconomist">
+            <div class="mb-4">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Paso 1: Elige un economista o escuela (13 disponibles):
+                </label>
+                <span class="text-[11px] text-indigo-600 font-semibold cursor-pointer" onclick="document.getElementById('econChipsContainer').scrollIntoView({behavior: 'smooth'})">
+                  <i class="fa-solid fa-hand-pointer mr-1"></i> Selecciona uno de la lista
+                </span>
+              </div>
+              <!-- Chips of Economists -->
+              <div id="econChipsContainer" class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <!-- Populated dynamically by JS -->
+              </div>
+            </div>
+
+            <!-- Result Card for Selected Economist -->
+            <div id="selectedEconResult" class="mt-6">
+              <!-- Populated dynamically by JS -->
+            </div>
+          </div>
+
+          <!-- SUB-VIEW 2: FILTRAR POR TEMA -->
+          <div id="filterSectionTopic" class="hidden">
+            <div class="mb-4">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Paso 1: Elige un eje temático de la cátedra (8 disponibles):
+                </label>
+                <span class="text-[11px] text-indigo-600 font-semibold">
+                  <i class="fa-solid fa-layer-group mr-1"></i> Haz clic para ver quiénes debaten
+                </span>
+              </div>
+              <!-- Chips of Topics -->
+              <div id="topicChipsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <!-- Populated dynamically by JS -->
+              </div>
+            </div>
+
+            <!-- Result Card for Selected Topic -->
+            <div id="selectedTopicResult" class="mt-6">
+              <!-- Populated dynamically by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: POR ECONOMISTA Y ÉPOCA -->
+    <!-- ========================================== -->
+    <div id="tab-economistas" class="tab-content hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-users text-indigo-600"></i>
+            Perfiles Doctrinales por Economista, Época y Postura Temática
+          </h3>
+          <p class="text-xs text-slate-600 mt-1">
+            Cada pensador situado en su contexto histórico, distinguiendo claramente los temas que trató de aquellos que no abordó puntualmente.
+          </p>
+        </div>
+        <!-- Search within Economists -->
+        <div class="w-full sm:w-72">
+          <input type="text" id="econSearchInput" placeholder="Filtrar economistas o doctrinas..." 
+                 class="w-full text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                 oninput="filterEconomistsList(this.value)">
+        </div>
+      </div>
+
+      <!-- Economists Cards Container -->
+      <div id="economistsListContainer" class="space-y-6">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: RESUMEN DETALLADO DE LOS 13 TEXTOS -->
+    <!-- ========================================== -->
+    <div id="tab-textos" class="tab-content hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-book text-indigo-600"></i>
+            Resumen Exhaustivo de los 13 Textos de la Cátedra
+          </h3>
+          <p class="text-xs text-slate-600 mt-1">
+            Análisis pormenorizado de cada archivo del programa de Sistemas Bancarios y Crediticios, incluyendo títulos, autores, páginas, tesis central y puntos clave.
+          </p>
+        </div>
+        <!-- Filter by Category -->
+        <div class="flex items-center gap-2">
+          <select id="textCategoryFilter" onchange="filterTextsList()" class="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <option value="all">Todas las Categorías</option>
+            <option value="Definición y Medición del Dinero">Definición del Dinero</option>
+            <option value="Historia y Metodología del Pensamiento Económico">Historia y Metodología</option>
+            <option value="Desarrollo Financiero y Banca en Economías Emergentes">Represión Financiera</option>
+            <option value="Teoría de la Inflación / Estructuralismo Latinoamericano">Inflación Estructural</option>
+            <option value="Economía del Comportamiento e Incertidumbre Radical">Incertidumbre / Shackle</option>
+            <option value="Finanzas Públicas y Economía Monetaria">Señoreaje e Impuesto Inflacionario</option>
+            <option value="Monetarismo y Doctrina Económica">Milton Friedman</option>
+            <option value="Intermediación Bancaria y Crisis Financieras">Bernanke / Canal de Crédito</option>
+            <option value="Evolución de la Macroeconomía Moderna">De Keynes a Lucas</option>
+            <option value="Teoría Bancaria y Creación de Dinero">Banking vs Currency School</option>
+            <option value="Teoría de la Inflación / Frontera Macroeconómica">Inflación como Conflicto</option>
+            <option value="Epistemología y Metodología Económica (>40 págs.)">&gt;40 Páginas</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Texts Grid / List -->
+      <div id="textsListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: TEXTOS DE MÁS DE 40 HOJAS (FILTRADO Y CRUCE) -->
+    <!-- ========================================== -->
+    <div id="tab-largos" class="tab-content hidden">
+      <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl mb-6 shadow-sm">
+        <div class="flex items-start gap-3">
+          <i class="fa-solid fa-filter-circle-dollar text-amber-600 text-xl mt-0.5"></i>
+          <div>
+            <h4 class="text-sm font-bold text-amber-900">
+              Regla de Análisis Aplicada: Filtrado y Conexión de Textos Extensos (&gt;40 Páginas)
+            </h4>
+            <p class="text-xs text-amber-800 mt-1 leading-relaxed">
+              Cumpliendo con tu instrucción expresa (<em>"los textos de más de 40 hojas compáralo con respecto a los demás textos y solo recopila la información relacionada"</em>), se han procesado de forma especial los dos textos que superan esa extensión: <strong>Facu 100 (Friedman - Metodología, 43 págs.)</strong> y <strong>Facu 97 (Chaves Barea - Demanda de Dinero, 61 págs.)</strong>. Se descartó la paja irrelevante (debates microeconómicos marginalistas de los 40 y más de 35 páginas de cuadros econométricos ARDL de Argentina) para conservar exclusivamente el instrumental conceptual vinculado a los demás textos del programa.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deep Dive Cards -->
+      <div id="deepDiveContainer" class="space-y-8">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: DESPLIEGUE EN RENDER (GUÍA PASO A PASO) -->
+    <!-- ========================================== -->
+    <div id="tab-render" class="tab-content hidden">
+      <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+        <div class="p-6 bg-gradient-to-r from-emerald-800 to-teal-900 text-white">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
+              <i class="fa-solid fa-cloud-arrow-up text-emerald-300"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold">Cómo Publicar Esta Página en Render Gratis en 2 Minutos</h3>
+              <p class="text-xs text-emerald-200 mt-0.5">Para que puedas abrir este compendio desde tu celular, tablet o cualquier computadora en cualquier parte del mundo.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-6 text-sm text-slate-700">
+          <!-- Option A: Static Site (Recommended) -->
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-200 px-2.5 py-1 rounded-full">
+                Opción 1 (Recomendada: 100% Gratis y Nunca se Duerme)
+              </span>
+              <span class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-bolt"></i> Despliegue Inmediato</span>
+            </div>
+            <h4 class="text-base font-bold text-emerald-950">Render Static Site (Sitio Estático)</h4>
+            <p class="text-xs text-emerald-900 mt-1 leading-relaxed">
+              Los sitios estáticos en Render son <strong>100% gratuitos para siempre</strong>, no tienen límites de horas al mes, tienen HTTPS seguro automático y <strong>nunca entran en reposo ni tienen demora de inicio</strong>.
+            </p>
+
+            <div class="mt-4 space-y-3">
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">1</span>
+                <div>
+                  <strong>Crea un repositorio en GitHub:</strong> Crea un nuevo repo (ej: <code>sistemas-bancarios</code>) y sube los archivos de esta carpeta.
+                  <div class="mt-2 bg-slate-900 text-emerald-400 p-3 rounded-lg text-xs font-mono overflow-x-auto">
+                    git init<br>
+                    git add .<br>
+                    git commit -m "Compendio Sistemas Bancarios y Teoria Monetaria"<br>
+                    git branch -M main<br>
+                    git remote add origin https://github.com/TU_USUARIO/sistemas-bancarios.git<br>
+                    git push -u origin main
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">2</span>
+                <div>
+                  <strong>Entra a Render.com:</strong> Inicia sesión en <a href="https://render.com" target="_blank" class="text-emerald-700 underline font-semibold">render.com</a> con tu cuenta de GitHub.
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">3</span>
+                <div>
+                  <strong>Crea un nuevo 'Static Site':</strong> Haz clic en <strong>New +</strong> &rarr; <strong>Static Site</strong>, conecta tu repositorio y configura:
+                  <ul class="list-disc list-inside mt-1 space-y-1 text-xs text-emerald-900">
+                    <li><strong>Name:</strong> <code>sistemas-bancarios</code> (o el nombre que elijas)</li>
+                    <li><strong>Branch:</strong> <code>main</code></li>
+                    <li><strong>Publish directory:</strong> <code>static</code> (o dejar vacío <code>.</code> si usas la raíz)</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">4</span>
+                <div>
+                  <strong>¡Listo!:</strong> Presiona <strong>Create Static Site</strong>. En 30 segundos obtendrás un enlace público como:
+                  <code class="bg-white border border-emerald-300 text-emerald-800 px-2 py-0.5 rounded font-bold">https://sistemas-bancarios.onrender.com</code> que podrás abrir desde tu celular, tablet o cualquier navegador.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Option B: Web Service (Python / Flask) -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-800 bg-indigo-100 px-2.5 py-1 rounded-full">
+                Opción 2: Web Service con Python / Flask
+              </span>
+              <span class="text-xs text-slate-500 font-semibold"><i class="fa-brands fa-python"></i> Backend Incluido</span>
+            </div>
+            <h4 class="text-base font-bold text-slate-900">Render Web Service (Servidor Python)</h4>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+              Ya hemos preparado el archivo <code>app.py</code>, <code>requirements.txt</code> y <code>Procfile</code> para ti. Si prefieres un servidor Python con API REST:
+            </p>
+            <ul class="list-disc list-inside mt-3 space-y-1 text-xs text-slate-700">
+              <li>En Render elige <strong>New +</strong> &rarr; <strong>Web Service</strong>.</li>
+              <li><strong>Runtime:</strong> <code>Python 3</code></li>
+              <li><strong>Build Command:</strong> <code>pip install -r requirements.txt</code></li>
+              <li><strong>Start Command:</strong> <code>gunicorn app:app</code></li>
+              <li>Elige el plan <strong>Free</strong> y presiona <strong>Deploy</strong>.</li>
+            </ul>
+          </div>
+
+          <!-- Run Locally Box -->
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+            <h4 class="text-base font-bold text-amber-950 flex items-center gap-2">
+              <i class="fa-solid fa-laptop-code text-amber-600"></i> Probar Localmente en tu Computadora Ahora Mismo
+            </h4>
+            <p class="text-xs text-amber-800 mt-1">
+              No tienes que esperar a subirlo para probarlo. Puedes correrlo en tu máquina abriendo una terminal en esta carpeta y ejecutando:
+            </p>
+            <div class="mt-2 bg-slate-900 text-amber-300 p-3 rounded-lg text-xs font-mono">
+              python app.py
+            </div>
+            <p class="text-xs text-amber-700 mt-2">
+              Luego abre tu navegador en <a href="http://localhost:5000" target="_blank" class="underline font-bold">http://localhost:5000</a> y verás la aplicación completa funcionando de inmediato.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Cell Detail Modal (Interactive Reader) -->
+  <div id="cellModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+      <div class="p-5 bg-indigo-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="modalIcon" class="w-10 h-10 rounded-xl bg-amber-400 text-indigo-950 flex items-center justify-center font-bold text-lg">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <div>
+            <h4 id="modalEconomist" class="font-bold text-base">Economista</h4>
+            <p id="modalTopic" class="text-xs text-indigo-200">Tema</p>
+          </div>
+        </div>
+        <button onclick="closeModal()" class="text-indigo-200 hover:text-white p-2 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4 text-sm text-slate-700 flex-1">
+        <div class="flex items-center gap-2 text-xs">
+          <span id="modalSchoolBadge" class="bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full font-semibold">Escuela</span>
+          <span id="modalEpochBadge" class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full font-medium">Época</span>
+        </div>
+
+        <div>
+          <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Postura y Argumento Central:</h5>
+          <div id="modalStance" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-slate-800 text-sm leading-relaxed whitespace-pre-line">
+            Contenido
+          </div>
+        </div>
+
+        <div id="modalSourceSection">
+          <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Textos de Referencia en la Cátedra:</h5>
+          <div id="modalSources" class="flex flex-wrap gap-1.5 text-xs">
+            <!-- Source tags -->
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs">
+        <span class="text-slate-500">Sistemas Bancarios y Teoría Monetaria</span>
+        <button onclick="closeModal()" class="px-4 py-2 bg-indigo-900 text-white font-semibold rounded-lg hover:bg-indigo-800 transition">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 bg-amber-400 rounded flex items-center justify-center text-slate-950 font-bold text-xs">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <span>Sistemas Bancarios y Crediticios &copy; 2026. Compendio Académico Especializado.</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span>13 Textos Sintetizados</span>
+        <span>&bull;</span>
+        <span>Preparado para Despliegue en Render</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

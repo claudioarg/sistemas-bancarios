@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+sample_*.png
+page_*.png
+ocr_helper.ps1
+inspect_*.py
+check_*.py
+print_overview.py
+show_headings.py
+analyze_texts.py
+pdf_overview.json
+text_deep_dive.json
+build_*.py
