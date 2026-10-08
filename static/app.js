@@ -17,6 +17,7 @@ function initApp() {
   renderEconomistsList();
   renderTextsList();
   renderDeepDive();
+  initExamTab();
 
   // Typeset math if MathJax is available
   if (window.MathJax && window.MathJax.typesetPromise) {
@@ -683,7 +684,10 @@ function renderEconomistsList(filterText = '') {
           </div>
           <p class="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed">${e.context}</p>
         </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <button onclick="launchExamForEconomist('${e.id}')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-graduation-cap text-amber-300"></i> Rendir Examen (20 Preguntas)
+          </button>
           <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-lg">
             ${addressedCount} temas abordados
           </span>
@@ -960,4 +964,672 @@ function handleSearchResultClick(tab, econId, topicId) {
   if (econId && topicId) {
     setTimeout(() => openModal(econId, topicId), 300);
   }
+}
+
+// ====================================================
+// CREADOR Y SIMULADOR DE EXÁMENES UNIVERSITARIOS
+// ====================================================
+
+let examConfig = {
+  economistId: 'all',
+  questionCount: 20,
+  mode: 'practice' // 'practice' | 'simulacro'
+};
+
+let examSession = {
+  questions: [],
+  currentIndex: 0,
+  userAnswers: {}, // index -> { selectedOptionIndex: number, isCorrect: boolean }
+  startTime: null,
+  timerInterval: null,
+  elapsedSeconds: 0,
+  isFinished: false,
+  mode: 'practice'
+};
+
+function initExamTab() {
+  const select = document.getElementById('examEconomistSelect');
+  if (!select) return;
+
+  // Clear existing options except 'all'
+  select.innerHTML = '<option value="all">🌟 Todos los Economistas (Examen Integrador de Cátedra - 260 Preguntas)</option>';
+
+  if (window.BANKING_DATA && window.BANKING_DATA.economists) {
+    window.BANKING_DATA.economists.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.id;
+      opt.textContent = `${e.name} (${e.school}) — 20 Preguntas`;
+      select.appendChild(opt);
+    });
+  }
+
+  select.addEventListener('change', (e) => {
+    examConfig.economistId = e.target.value;
+    updateExamConfigHelperText();
+  });
+
+  updateExamConfigHelperText();
+}
+
+function updateExamConfigHelperText() {
+  const helper = document.getElementById('examAvailableCountText');
+  if (!helper) return;
+
+  if (examConfig.economistId === 'all') {
+    helper.innerHTML = '<i class="fa-solid fa-layer-group text-indigo-600 mr-1"></i> Banco global: <strong>260 preguntas teóricas</strong> de los 13 autores de la cátedra.';
+  } else {
+    const econ = window.BANKING_DATA?.economists.find(e => e.id === examConfig.economistId);
+    const authorName = econ ? econ.name : 'este autor';
+    helper.innerHTML = `<i class="fa-solid fa-user-check text-emerald-600 mr-1"></i> Banco especializado: <strong>20 preguntas de alta rigurosidad</strong> para <strong>${authorName}</strong>.`;
+  }
+}
+
+function setExamQuestionCount(count) {
+  examConfig.questionCount = count;
+  document.querySelectorAll('.count-pill').forEach(btn => {
+    btn.classList.remove('active', 'border-2', 'border-indigo-600', 'bg-indigo-50', 'text-indigo-900');
+    btn.classList.add('border', 'border-slate-200', 'bg-slate-50', 'text-slate-700');
+  });
+
+  const activeBtn = document.getElementById(`btnCount-${count}`);
+  if (activeBtn) {
+    activeBtn.classList.remove('border', 'border-slate-200', 'bg-slate-50', 'text-slate-700');
+    activeBtn.classList.add('active', 'border-2', 'border-indigo-600', 'bg-indigo-50', 'text-indigo-900');
+  }
+}
+
+function setExamMode(mode) {
+  examConfig.mode = mode;
+  document.querySelectorAll('.mode-pill').forEach(btn => {
+    btn.classList.remove('active', 'border-2', 'border-indigo-600', 'bg-indigo-50', 'text-indigo-950');
+    btn.classList.add('border', 'border-slate-200', 'bg-slate-50', 'text-slate-700');
+  });
+
+  const activeBtn = document.getElementById(`btnMode-${mode}`);
+  if (activeBtn) {
+    activeBtn.classList.remove('border', 'border-slate-200', 'bg-slate-50', 'text-slate-700');
+    activeBtn.classList.add('active', 'border-2', 'border-indigo-600', 'bg-indigo-50', 'text-indigo-950');
+  }
+}
+
+function launchExamForEconomist(econId) {
+  switchTab('tab-examenes');
+  const select = document.getElementById('examEconomistSelect');
+  if (select) {
+    select.value = econId;
+    examConfig.economistId = econId;
+    updateExamConfigHelperText();
+  }
+  // Default to 20 questions for that author
+  setExamQuestionCount(20);
+
+  // Scroll smoothly to config view
+  const configView = document.getElementById('examConfigView');
+  if (configView) {
+    configView.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function shuffleArray(arr) {
+  const array = [...arr];
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function startExamSession() {
+  if (!window.EXAM_QUESTIONS || !window.EXAM_QUESTIONS.questions_by_economist) {
+    alert('El banco de preguntas no se ha cargado correctamente. Por favor recarga la página.');
+    return;
+  }
+
+  const select = document.getElementById('examEconomistSelect');
+  const selectedEconId = select ? select.value : examConfig.economistId;
+  examConfig.economistId = selectedEconId;
+
+  let rawQuestions = [];
+
+  if (selectedEconId === 'all') {
+    // Collect from all economists
+    Object.keys(window.EXAM_QUESTIONS.questions_by_economist).forEach(eid => {
+      const econ = window.BANKING_DATA?.economists.find(e => e.id === eid);
+      const list = window.EXAM_QUESTIONS.questions_by_economist[eid] || [];
+      list.forEach(q => {
+        rawQuestions.push({
+          ...q,
+          econId: eid,
+          econName: econ ? econ.name : 'Economista de la Cátedra',
+          econSchool: econ ? econ.school : 'Teoría Monetaria'
+        });
+      });
+    });
+    // Shuffle all and slice to requested count
+    rawQuestions = shuffleArray(rawQuestions).slice(0, examConfig.questionCount);
+  } else {
+    // Specific economist
+    const econ = window.BANKING_DATA?.economists.find(e => e.id === selectedEconId);
+    const list = window.EXAM_QUESTIONS.questions_by_economist[selectedEconId] || [];
+    list.forEach(q => {
+      rawQuestions.push({
+        ...q,
+        econId: selectedEconId,
+        econName: econ ? econ.name : 'Economista de la Cátedra',
+        econSchool: econ ? econ.school : 'Teoría Monetaria'
+      });
+    });
+    // Shuffle and pick up to questionCount
+    const limit = Math.min(examConfig.questionCount, rawQuestions.length);
+    rawQuestions = shuffleArray(rawQuestions).slice(0, limit);
+  }
+
+  if (rawQuestions.length === 0) {
+    alert('No se encontraron preguntas disponibles para este autor.');
+    return;
+  }
+
+  // Shuffle options for each question so correct answer isn't always at the same index
+  const processedQuestions = rawQuestions.map(q => {
+    const optsWithFlags = q.options.map((text, idx) => ({
+      text,
+      isCorrect: idx === q.correct_index
+    }));
+    const shuffledOpts = shuffleArray(optsWithFlags);
+    const newCorrectIndex = shuffledOpts.findIndex(o => o.isCorrect);
+
+    return {
+      ...q,
+      options: shuffledOpts.map(o => o.text),
+      correct_index: newCorrectIndex
+    };
+  });
+
+  // Initialize session
+  examSession = {
+    questions: processedQuestions,
+    currentIndex: 0,
+    userAnswers: {},
+    startTime: Date.now(),
+    timerInterval: null,
+    elapsedSeconds: 0,
+    isFinished: false,
+    mode: examConfig.mode
+  };
+
+  // Timer handling
+  if (examSession.mode === 'simulacro') {
+    const timerBox = document.getElementById('examTimerContainer');
+    if (timerBox) timerBox.classList.remove('hidden');
+    updateTimerDisplay();
+    examSession.timerInterval = setInterval(() => {
+      examSession.elapsedSeconds++;
+      updateTimerDisplay();
+    }, 1000);
+  } else {
+    const timerBox = document.getElementById('examTimerContainer');
+    if (timerBox) timerBox.classList.add('hidden');
+  }
+
+  // Update header badges
+  const badgeAuthor = document.getElementById('examBadgeAuthor');
+  if (badgeAuthor) {
+    if (selectedEconId === 'all') {
+      badgeAuthor.textContent = '🌟 Examen Integrador de Cátedra';
+    } else {
+      const econ = window.BANKING_DATA?.economists.find(e => e.id === selectedEconId);
+      badgeAuthor.textContent = econ ? econ.name : 'Autor Evaluado';
+    }
+  }
+
+  const badgeMode = document.getElementById('examBadgeMode');
+  if (badgeMode) {
+    if (examSession.mode === 'practice') {
+      badgeMode.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 flex items-center gap-1';
+      badgeMode.innerHTML = '<i class="fa-solid fa-lightbulb"></i> Práctica Guiada';
+    } else {
+      badgeMode.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 flex items-center gap-1';
+      badgeMode.innerHTML = '<i class="fa-solid fa-stopwatch"></i> Simulacro Real';
+    }
+  }
+
+  // Switch Views
+  document.getElementById('examConfigView')?.classList.add('hidden');
+  document.getElementById('examResultsView')?.classList.add('hidden');
+  document.getElementById('examActiveView')?.classList.remove('hidden');
+
+  renderActiveQuestion();
+
+  // Scroll to active container
+  document.getElementById('examActiveView')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateTimerDisplay() {
+  const display = document.getElementById('examTimerDisplay');
+  if (!display) return;
+  const mins = Math.floor(examSession.elapsedSeconds / 60).toString().padStart(2, '0');
+  const secs = (examSession.elapsedSeconds % 60).toString().padStart(2, '0');
+  display.textContent = `${mins}:${secs}`;
+}
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const secs = (seconds % 60).toString().padStart(2, '0');
+  return `${mins}:${secs}`;
+}
+
+function renderActiveQuestion() {
+  const total = examSession.questions.length;
+  const idx = examSession.currentIndex;
+  const q = examSession.questions[idx];
+
+  // Counters & Progress
+  document.getElementById('examCurrentNum').textContent = idx + 1;
+  document.getElementById('examTotalNum').textContent = total;
+  const pct = Math.round(((idx + 1) / total) * 100);
+  document.getElementById('examProgressBar').style.width = `${pct}%`;
+
+  // Topic badge & question text
+  document.getElementById('examQuestionTopic').innerHTML = `
+    <span class="font-bold text-indigo-900">${q.econName}</span>
+    <span class="text-slate-400">&bull;</span>
+    <span class="text-slate-600">${q.econSchool}</span>
+  `;
+  document.getElementById('examQuestionText').textContent = q.question;
+
+  // Options rendering
+  const optionsContainer = document.getElementById('examOptionsContainer');
+  optionsContainer.innerHTML = '';
+
+  const ans = examSession.userAnswers[idx];
+  const hasAnswered = ans !== undefined;
+  const letters = ['A', 'B', 'C', 'D'];
+
+  q.options.forEach((optText, optIdx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'w-full text-left p-4 rounded-xl transition flex items-start gap-3 border text-xs sm:text-sm ';
+
+    const isSelected = hasAnswered && ans.selectedOptionIndex === optIdx;
+    const isCorrectOption = optIdx === q.correct_index;
+
+    if (examSession.mode === 'practice') {
+      if (hasAnswered) {
+        // Practice mode answered state
+        btn.disabled = true;
+        if (isCorrectOption) {
+          btn.className += 'bg-emerald-50 border-2 border-emerald-500 text-emerald-950 font-bold shadow-sm';
+        } else if (isSelected && !ans.isCorrect) {
+          btn.className += 'bg-rose-50 border-2 border-rose-500 text-rose-950 font-medium line-through';
+        } else {
+          btn.className += 'bg-slate-50 border-slate-200 text-slate-400 opacity-60';
+        }
+      } else {
+        // Practice mode unanswered state
+        btn.className += 'bg-white border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 text-slate-800 font-medium cursor-pointer shadow-xs';
+        btn.onclick = () => selectExamOption(optIdx);
+      }
+    } else {
+      // Simulacro mode
+      if (isSelected) {
+        btn.className += 'bg-indigo-50 border-2 border-indigo-600 text-indigo-950 font-bold shadow-sm';
+      } else {
+        btn.className += 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-xs';
+      }
+      btn.onclick = () => selectExamOption(optIdx);
+    }
+
+    // Inner Option HTML
+    let iconHtml = '';
+    if (examSession.mode === 'practice' && hasAnswered) {
+      if (isCorrectOption) {
+        iconHtml = '<i class="fa-solid fa-circle-check text-emerald-600 text-base mt-0.5 flex-shrink-0"></i>';
+      } else if (isSelected && !ans.isCorrect) {
+        iconHtml = '<i class="fa-solid fa-circle-xmark text-rose-600 text-base mt-0.5 flex-shrink-0"></i>';
+      } else {
+        iconHtml = `<span class="w-6 h-6 rounded-lg bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center flex-shrink-0">${letters[optIdx]}</span>`;
+      }
+    } else {
+      const letterBg = isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200';
+      iconHtml = `<span class="w-6 h-6 rounded-lg ${letterBg} font-bold text-xs flex items-center justify-center flex-shrink-0">${letters[optIdx]}</span>`;
+    }
+
+    btn.innerHTML = `
+      ${iconHtml}
+      <div class="flex-1 leading-relaxed">${optText}</div>
+    `;
+
+    optionsContainer.appendChild(btn);
+  });
+
+  // Feedback Box (Practice Mode Only)
+  const feedbackBox = document.getElementById('examFeedbackBox');
+  const feedbackTitle = document.getElementById('examFeedbackTitle');
+  const feedbackExp = document.getElementById('examFeedbackExplanation');
+
+  if (examSession.mode === 'practice' && hasAnswered) {
+    feedbackBox.classList.remove('hidden');
+    if (ans.isCorrect) {
+      feedbackBox.className = 'mt-6 p-5 rounded-2xl border-2 border-emerald-300 bg-emerald-50/80 text-emerald-950 transition-all shadow-sm';
+      feedbackTitle.innerHTML = `
+        <span class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm shadow">
+          <i class="fa-solid fa-check"></i>
+        </span>
+        <span class="text-emerald-900 font-extrabold text-sm sm:text-base">¡Respuesta Correcta! Justificación Teórica Universitaria:</span>
+      `;
+    } else {
+      feedbackBox.className = 'mt-6 p-5 rounded-2xl border-2 border-rose-300 bg-rose-50/80 text-rose-950 transition-all shadow-sm';
+      feedbackTitle.innerHTML = `
+        <span class="w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm shadow">
+          <i class="fa-solid fa-xmark"></i>
+        </span>
+        <span class="text-rose-900 font-extrabold text-sm sm:text-base">Respuesta Incorrecta. La opción correcta es la ${letters[q.correct_index]}:</span>
+      `;
+    }
+
+    feedbackExp.innerHTML = `
+      <div class="mt-2 text-xs sm:text-sm text-slate-800 leading-relaxed bg-white/90 p-4 rounded-xl border border-slate-200/60 shadow-xs">
+        <p class="font-sans">${q.explanation}</p>
+      </div>
+    `;
+  } else {
+    feedbackBox.classList.add('hidden');
+  }
+
+  // Navigation Buttons
+  const btnPrev = document.getElementById('btnExamPrev');
+  const btnNext = document.getElementById('btnExamNext');
+  const btnFinish = document.getElementById('btnExamFinish');
+
+  btnPrev.disabled = (idx === 0);
+
+  if (idx === total - 1) {
+    btnNext.classList.add('hidden');
+    btnFinish.classList.remove('hidden');
+  } else {
+    btnNext.classList.remove('hidden');
+    btnFinish.classList.add('hidden');
+  }
+
+  // Paginator Pills
+  renderExamPills();
+
+  // MathJax typeset
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise();
+  }
+}
+
+function renderExamPills() {
+  const pillsContainer = document.getElementById('examPillsContainer');
+  if (!pillsContainer) return;
+  pillsContainer.innerHTML = '';
+
+  const total = examSession.questions.length;
+  for (let i = 0; i < total; i++) {
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'w-7 h-7 rounded-lg text-xs font-bold transition flex items-center justify-center flex-shrink-0 ';
+
+    const ans = examSession.userAnswers[i];
+    const isCurrent = i === examSession.currentIndex;
+
+    if (isCurrent) {
+      pill.className += 'ring-2 ring-indigo-600 ring-offset-1 font-black ';
+    }
+
+    if (ans !== undefined) {
+      if (examSession.mode === 'practice') {
+        pill.className += ans.isCorrect ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white';
+      } else {
+        pill.className += 'bg-indigo-600 text-white';
+      }
+    } else {
+      pill.className += 'bg-slate-100 text-slate-600 hover:bg-slate-200';
+    }
+
+    pill.textContent = (i + 1);
+    pill.onclick = () => jumpToExamQuestion(i);
+    pillsContainer.appendChild(pill);
+  }
+}
+
+function selectExamOption(optIdx) {
+  if (examSession.mode === 'practice' && examSession.userAnswers[examSession.currentIndex] !== undefined) {
+    return; // Already answered in practice mode
+  }
+
+  const q = examSession.questions[examSession.currentIndex];
+  examSession.userAnswers[examSession.currentIndex] = {
+    selectedOptionIndex: optIdx,
+    isCorrect: optIdx === q.correct_index
+  };
+
+  renderActiveQuestion();
+}
+
+function navigateExam(delta) {
+  const newIndex = examSession.currentIndex + delta;
+  if (newIndex >= 0 && newIndex < examSession.questions.length) {
+    examSession.currentIndex = newIndex;
+    renderActiveQuestion();
+  }
+}
+
+function jumpToExamQuestion(targetIndex) {
+  if (targetIndex >= 0 && targetIndex < examSession.questions.length) {
+    examSession.currentIndex = targetIndex;
+    renderActiveQuestion();
+  }
+}
+
+function confirmCancelExam() {
+  const msg = '¿Estás seguro de que deseas abandonar la sesión de examen actual? Se perderán las respuestas.';
+  if (confirm(msg)) {
+    if (examSession.timerInterval) clearInterval(examSession.timerInterval);
+    document.getElementById('examActiveView')?.classList.add('hidden');
+    document.getElementById('examResultsView')?.classList.add('hidden');
+    document.getElementById('examConfigView')?.classList.remove('hidden');
+    document.getElementById('examConfigView')?.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function finishExamSession() {
+  const total = examSession.questions.length;
+  const answeredCount = Object.keys(examSession.userAnswers).length;
+  const unansweredCount = total - answeredCount;
+
+  if (unansweredCount > 0) {
+    const confirmMsg = `Tienes ${unansweredCount} pregunta(s) sin responder de ${total}. ¿Deseas entregar el examen de todos modos?`;
+    if (!confirm(confirmMsg)) return;
+  }
+
+  // Stop Timer
+  if (examSession.timerInterval) clearInterval(examSession.timerInterval);
+  examSession.isFinished = true;
+
+  // Calculate results
+  let correctCount = 0;
+  for (let i = 0; i < total; i++) {
+    const ans = examSession.userAnswers[i];
+    if (ans && ans.isCorrect) correctCount++;
+  }
+  const incorrectCount = total - correctCount;
+  const percentage = Math.round((correctCount / total) * 100);
+  const grade = Math.round((correctCount / total) * 10 * 10) / 10;
+
+  // Populate Scorecard
+  document.getElementById('resStatTotal').textContent = total;
+  document.getElementById('resStatCorrect').textContent = correctCount;
+  document.getElementById('resStatIncorrect').textContent = incorrectCount;
+  document.getElementById('resStatTime').textContent = formatTime(examSession.elapsedSeconds);
+
+  // Diagnostic grading
+  const badgeIcon = document.getElementById('examResultBadgeIcon');
+  const levelBadge = document.getElementById('examResultLevel');
+  const gradeTitle = document.getElementById('examResultGradeTitle');
+  const subtext = document.getElementById('examResultSubtext');
+
+  if (grade >= 9) {
+    badgeIcon.className = 'w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-lg bg-emerald-500 text-white';
+    badgeIcon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+    levelBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-emerald-100 text-emerald-800 border border-emerald-300';
+    levelBadge.textContent = 'Sobresaliente / Nivel Distinguido';
+    gradeTitle.textContent = `Calificación: ${grade} / 10 (${percentage}%)`;
+    gradeTitle.className = 'text-3xl font-black text-emerald-700';
+    subtext.textContent = '¡Rendimiento académico impecable! Demuestras un dominio profundo de los textos, deducciones teóricas y contraposiciones de la cátedra.';
+  } else if (grade >= 7) {
+    badgeIcon.className = 'w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-lg bg-indigo-600 text-white';
+    badgeIcon.innerHTML = '<i class="fa-solid fa-medal"></i>';
+    levelBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-indigo-100 text-indigo-800 border border-indigo-300';
+    levelBadge.textContent = 'Distinguido / Muy Buen Nivel';
+    gradeTitle.textContent = `Calificación: ${grade} / 10 (${percentage}%)`;
+    gradeTitle.className = 'text-3xl font-black text-indigo-800';
+    subtext.textContent = 'Sólida preparación teórica. Comprendes con claridad los mecanismos centrales de transmisión y las diferencias doctrinales.';
+  } else if (grade >= 6) {
+    badgeIcon.className = 'w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-lg bg-amber-500 text-white';
+    badgeIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+    levelBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-amber-100 text-amber-800 border border-amber-300';
+    levelBadge.textContent = 'Aprobado (Umbral Universitario)';
+    gradeTitle.textContent = `Calificación: ${grade} / 10 (${percentage}%)`;
+    gradeTitle.className = 'text-3xl font-black text-amber-700';
+    subtext.textContent = 'Has alcanzado los conocimientos indispensables para aprobar la materia, aunque se recomienda repasar los textos y detalles técnicos.';
+  } else if (grade >= 4) {
+    badgeIcon.className = 'w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-lg bg-orange-500 text-white';
+    badgeIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+    levelBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-orange-100 text-orange-800 border border-orange-300';
+    levelBadge.textContent = 'Insuficiente / Recuperatorio';
+    gradeTitle.textContent = `Calificación: ${grade} / 10 (${percentage}%)`;
+    gradeTitle.className = 'text-3xl font-black text-orange-700';
+    subtext.textContent = 'Se identifican confusiones conceptuales en supuestos analíticos clave. Utiliza la revisión inferior para repasar cada doctrina.';
+  } else {
+    badgeIcon.className = 'w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-lg bg-rose-600 text-white';
+    badgeIcon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    levelBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-rose-100 text-rose-800 border border-rose-300';
+    levelBadge.textContent = 'Reprobado';
+    gradeTitle.textContent = `Calificación: ${grade} / 10 (${percentage}%)`;
+    gradeTitle.className = 'text-3xl font-black text-rose-700';
+    subtext.textContent = 'No se alcanzan los objetivos teóricos mínimos. Es imprescindible estudiar a fondo las fichas por economista y los textos obligatorios.';
+  }
+
+  // Render Detailed Review List
+  renderExamDetailedReview();
+
+  // Switch to Results View
+  document.getElementById('examActiveView')?.classList.add('hidden');
+  document.getElementById('examResultsView')?.classList.remove('hidden');
+  document.getElementById('examResultsView')?.scrollIntoView({ behavior: 'smooth' });
+
+  // MathJax typeset
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise();
+  }
+}
+
+function renderExamDetailedReview() {
+  const container = document.getElementById('examReviewList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const letters = ['A', 'B', 'C', 'D'];
+
+  examSession.questions.forEach((q, idx) => {
+    const ans = examSession.userAnswers[idx];
+    const isAnswered = ans !== undefined;
+    const isCorrect = isAnswered && ans.isCorrect;
+
+    const card = document.createElement('div');
+    card.className = `p-6 rounded-2xl border-2 transition ${
+      !isAnswered
+        ? 'bg-slate-50 border-slate-300'
+        : isCorrect
+        ? 'bg-emerald-50/40 border-emerald-300'
+        : 'bg-rose-50/40 border-rose-300'
+    }`;
+
+    let statusBadge = '';
+    if (!isAnswered) {
+      statusBadge = '<span class="text-xs bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-full"><i class="fa-solid fa-circle-minus mr-1"></i> Sin Responder</span>';
+    } else if (isCorrect) {
+      statusBadge = '<span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300"><i class="fa-solid fa-check mr-1"></i> Correcta</span>';
+    } else {
+      statusBadge = '<span class="text-xs bg-rose-100 text-rose-800 font-bold px-2.5 py-1 rounded-full border border-rose-300"><i class="fa-solid fa-xmark mr-1"></i> Incorrecta</span>';
+    }
+
+    let optionsHtml = '<div class="space-y-2 mt-4">';
+    q.options.forEach((optText, optIdx) => {
+      const isSelected = isAnswered && ans.selectedOptionIndex === optIdx;
+      const isTheRightOption = optIdx === q.correct_index;
+
+      let rowClass = 'p-3 rounded-xl border text-xs leading-relaxed flex items-start gap-2.5 ';
+      let icon = '';
+
+      if (isTheRightOption) {
+        rowClass += 'bg-emerald-100/70 border-emerald-400 font-bold text-emerald-950 shadow-xs';
+        icon = '<i class="fa-solid fa-circle-check text-emerald-600 text-sm mt-0.5 flex-shrink-0"></i>';
+      } else if (isSelected && !isTheRightOption) {
+        rowClass += 'bg-rose-100/70 border-rose-400 text-rose-950 line-through';
+        icon = '<i class="fa-solid fa-circle-xmark text-rose-600 text-sm mt-0.5 flex-shrink-0"></i>';
+      } else {
+        rowClass += 'bg-white border-slate-200 text-slate-600';
+        icon = `<span class="w-5 h-5 rounded bg-slate-100 text-slate-500 font-bold text-[10px] flex items-center justify-center flex-shrink-0">${letters[optIdx]}</span>`;
+      }
+
+      optionsHtml += `
+        <div class="${rowClass}">
+          ${icon}
+          <div>
+            <span class="font-bold mr-1">${letters[optIdx]}.</span>
+            <span>${optText}</span>
+            ${isSelected ? ' <span class="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded ml-1 border border-indigo-200">(Tu Elección)</span>' : ''}
+            ${isTheRightOption ? ' <span class="text-[10px] font-black uppercase text-emerald-800 bg-emerald-200/80 px-1.5 py-0.5 rounded ml-1">(Correcta)</span>' : ''}
+          </div>
+        </div>
+      `;
+    });
+    optionsHtml += '</div>';
+
+    card.innerHTML = `
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-3 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-indigo-900 text-amber-300 font-bold text-xs flex items-center justify-center">
+            ${idx + 1}
+          </span>
+          <span class="text-xs font-bold text-indigo-900">${q.econName}</span>
+          <span class="text-slate-400">&bull;</span>
+          <span class="text-xs text-slate-600">${q.econSchool}</span>
+        </div>
+        ${statusBadge}
+      </div>
+
+      <h5 class="text-sm font-bold text-slate-900 leading-snug">
+        ${q.question}
+      </h5>
+
+      ${optionsHtml}
+
+      <!-- Justification Box -->
+      <div class="mt-4 p-4 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 shadow-xs">
+        <div class="font-bold text-indigo-950 flex items-center gap-1.5 mb-1.5">
+          <i class="fa-solid fa-graduation-cap text-indigo-600"></i>
+          Justificación Teórica y Referencia Doctrinal:
+        </div>
+        <p class="leading-relaxed text-slate-700 font-sans">${q.explanation}</p>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function resetExamToConfig() {
+  document.getElementById('examResultsView')?.classList.add('hidden');
+  document.getElementById('examActiveView')?.classList.add('hidden');
+  document.getElementById('examConfigView')?.classList.remove('hidden');
+  document.getElementById('examConfigView')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function restartCurrentExam() {
+  // Restart with same questions or reshuffled
+  startExamSession();
 }

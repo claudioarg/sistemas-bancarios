@@ -38,6 +38,9 @@
           <button onclick="switchTab('tab-economistas')" id="nav-tab-economistas" class="nav-btn active px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-800 text-amber-300 shadow">
             <i class="fa-solid fa-user-tie"></i> Por Economista y Época
           </button>
+          <button onclick="switchTab('tab-examenes')" id="nav-tab-examenes" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
+            <i class="fa-solid fa-graduation-cap text-amber-400"></i> Exámenes (Multiple Choice)
+          </button>
           <button onclick="switchTab('tab-filtro')" id="nav-tab-filtro" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
             <i class="fa-solid fa-sliders"></i> Filtrar (Autor / Tema)
           </button>
@@ -67,6 +70,7 @@
     <!-- Mobile Nav Bar -->
     <div class="md:hidden bg-indigo-950 border-t border-indigo-800 px-3 py-2 flex justify-around overflow-x-auto text-xs font-medium">
       <button onclick="switchTab('tab-economistas')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap">Por Economista</button>
+      <button onclick="switchTab('tab-examenes')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap"><i class="fa-solid fa-graduation-cap mr-1"></i>Exámenes</button>
       <button onclick="switchTab('tab-filtro')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">Filtrar</button>
       <button onclick="switchTab('tab-textos')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">13 Textos</button>
       <button onclick="switchTab('tab-largos')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">&gt;40 Págs</button>
@@ -418,6 +422,284 @@
       </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- TAB: CREADOR Y SIMULADOR DE EXÁMENES -->
+    <!-- ========================================== -->
+    <div id="tab-examenes" class="tab-content hidden space-y-6">
+      <!-- Title & Banner -->
+      <div class="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-indigo-800/60 relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 text-indigo-800/30 text-9xl pointer-events-none font-black select-none">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="relative z-10 max-w-3xl">
+          <div class="inline-flex items-center gap-2 bg-amber-400 text-slate-950 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-3 shadow">
+            <i class="fa-solid fa-clipboard-check"></i> Creador de Exámenes Universitario
+          </div>
+          <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Simulador de Evaluaciones Teóricas
+          </h3>
+          <p class="mt-2 text-indigo-200 text-sm leading-relaxed">
+            Banco oficial de <strong>260 preguntas teóricas multiple choice</strong> de alta rigurosidad académica (hasta 20 preguntas por cada uno de los 13 economistas/escuelas). Pon a prueba tus deducciones, el conocimiento de los debates doctrinales y los mecanismos de transmisión monetaria.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-4 text-xs font-medium text-indigo-300">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-book-bookmark text-amber-400"></i> 13 Autores / Escuelas</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-emerald-400"></i> Hasta 20 preguntas por autor</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-stopwatch text-sky-400"></i> Modo Práctica &amp; Simulacro Real</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-award text-pink-400"></i> Escala de 1 a 10 con Justificación</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 1: EXAM CONFIGURATOR -->
+      <div id="examConfigView" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        <div class="border-b border-slate-200 pb-4 mb-6">
+          <h4 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-indigo-600"></i> Configurar Parámetros del Examen
+          </h4>
+          <p class="text-xs text-slate-500 mt-1">
+            Personaliza el autor específico que deseas evaluar o selecciona un examen integrador de toda la cátedra.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- 1. Selection of Economist -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              1. Seleccionar Economista o Cátedra
+            </label>
+            <select id="examEconomistSelect" class="w-full text-sm font-medium bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+              <option value="all">🌟 Todos los Economistas (Examen Integrador de Cátedra)</option>
+              <!-- Filled dynamically by initExamTab -->
+            </select>
+            <p id="examAvailableCountText" class="text-xs text-slate-500">
+              Banco disponible: 20 preguntas especializadas para este autor.
+            </p>
+          </div>
+
+          <!-- 2. Question Count -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              2. Cantidad de Preguntas (Hasta 20)
+            </label>
+            <div class="grid grid-cols-4 gap-2">
+              <button type="button" onclick="setExamQuestionCount(5)" id="btnCount-5" class="count-pill py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 transition text-center">
+                5
+              </button>
+              <button type="button" onclick="setExamQuestionCount(10)" id="btnCount-10" class="count-pill py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 transition text-center">
+                10
+              </button>
+              <button type="button" onclick="setExamQuestionCount(15)" id="btnCount-15" class="count-pill py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 transition text-center">
+                15
+              </button>
+              <button type="button" onclick="setExamQuestionCount(20)" id="btnCount-20" class="count-pill active py-2.5 px-3 text-xs font-bold rounded-xl border-2 border-indigo-600 bg-indigo-50 text-indigo-900 transition text-center">
+                20 (Max)
+              </button>
+            </div>
+            <p class="text-xs text-slate-500">
+              Elige hasta 20 preguntas por economista o para el integrador.
+            </p>
+          </div>
+
+          <!-- 3. Exam Mode -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              3. Modalidad de Evaluación
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="setExamMode('practice')" id="btnMode-practice" class="mode-pill active text-left p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-indigo-950 transition">
+                <div class="text-xs font-black flex items-center gap-1.5">
+                  <i class="fa-solid fa-lightbulb text-amber-500"></i> Práctica Guiada
+                </div>
+                <div class="text-[11px] text-slate-600 mt-1">
+                  Feedback y justificación inmediata tras cada opción.
+                </div>
+              </button>
+              <button type="button" onclick="setExamMode('simulacro')" id="btnMode-simulacro" class="mode-pill text-left p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 transition">
+                <div class="text-xs font-black flex items-center gap-1.5">
+                  <i class="fa-solid fa-stopwatch text-indigo-600"></i> Simulacro Real
+                </div>
+                <div class="text-[11px] text-slate-600 mt-1">
+                  Cronómetro activo, nota final de 1 a 10 e informe final.
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Launch Button Box -->
+        <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-xs text-slate-600 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-indigo-600"></i>
+            <span>Las preguntas se seleccionan al azar del banco universitario y las opciones se barajan para evitar memorización posicional.</span>
+          </div>
+          <button type="button" onclick="startExamSession()" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 text-sm transition transform active:scale-95">
+            <i class="fa-solid fa-play"></i> Comenzar Examen Ahora
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW 2: ACTIVE EXAM SESSION -->
+      <div id="examActiveView" class="hidden space-y-6">
+        <!-- Top Status Bar -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span id="examBadgeAuthor" class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">
+              Autor
+            </span>
+            <span id="examBadgeMode" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 flex items-center gap-1">
+              <i class="fa-solid fa-lightbulb"></i> Práctica Guiada
+            </span>
+          </div>
+
+          <!-- Progress and Counter -->
+          <div class="flex items-center gap-6">
+            <div id="examTimerContainer" class="hidden items-center gap-2 font-mono text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+              <i class="fa-solid fa-clock text-indigo-600"></i>
+              <span id="examTimerDisplay">00:00</span>
+            </div>
+            <div class="text-xs font-bold text-slate-700">
+              Pregunta <span id="examCurrentNum" class="text-indigo-600 text-sm">1</span> de <span id="examTotalNum" class="text-slate-900 text-sm">20</span>
+            </div>
+            <button type="button" onclick="confirmCancelExam()" class="text-xs text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Abandonar
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner">
+          <div id="examProgressBar" class="bg-gradient-to-r from-indigo-500 to-amber-500 h-2 rounded-full transition-all duration-300" style="width: 5%"></div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+          <div class="mb-4 flex items-center gap-2 text-xs font-semibold text-slate-500">
+            <i class="fa-solid fa-circle-question text-indigo-600"></i>
+            <span id="examQuestionTopic">Eje Temático</span>
+          </div>
+
+          <!-- Question Prompt -->
+          <h4 id="examQuestionText" class="text-base sm:text-lg font-bold text-slate-900 leading-snug mb-6">
+            Texto de la pregunta
+          </h4>
+
+          <!-- Options Container -->
+          <div id="examOptionsContainer" class="space-y-3">
+            <!-- 4 options generated dynamically -->
+          </div>
+
+          <!-- Immediate Feedback Box (Practice Mode) -->
+          <div id="examFeedbackBox" class="mt-6 p-5 rounded-xl border hidden transition-all">
+            <div class="flex items-center gap-2 font-bold text-sm mb-2" id="examFeedbackTitle">
+              <!-- Result Icon & Text -->
+            </div>
+            <div id="examFeedbackExplanation" class="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-2">
+              <!-- Detailed theoretical explanation -->
+            </div>
+          </div>
+
+          <!-- Footer Navigation Buttons -->
+          <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between gap-4">
+            <button type="button" id="btnExamPrev" onclick="navigateExam(-1)" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-2 transition disabled:opacity-40 disabled:pointer-events-none">
+              <i class="fa-solid fa-chevron-left"></i> Anterior
+            </button>
+
+            <!-- Quick Questions Paginator / Dots -->
+            <div id="examPillsContainer" class="hidden sm:flex items-center gap-1.5 overflow-x-auto max-w-[50%] py-1">
+              <!-- Dots -->
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button type="button" id="btnExamNext" onclick="navigateExam(1)" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 flex items-center gap-2 transition shadow shadow-indigo-600/20">
+                Siguiente <i class="fa-solid fa-chevron-right"></i>
+              </button>
+              <button type="button" id="btnExamFinish" onclick="finishExamSession()" class="hidden px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 flex items-center gap-2 transition shadow shadow-emerald-600/20">
+                <i class="fa-solid fa-flag-checkered"></i> Finalizar Examen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: EXAM RESULTS SUMMARY & REPORT -->
+      <div id="examResultsView" class="hidden space-y-6">
+        <!-- Results Scorecard -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+          <div class="text-center max-w-xl mx-auto space-y-4">
+            <div id="examResultBadgeIcon" class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-lg">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div>
+              <span id="examResultLevel" class="inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">
+                Nivel Académico
+              </span>
+              <h4 id="examResultGradeTitle" class="text-3xl font-black text-slate-900">
+                Nota: 10 / 10
+              </h4>
+              <p id="examResultSubtext" class="text-xs sm:text-sm text-slate-600 mt-2">
+                Diagnóstico de desempeño...
+              </p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div class="text-xs text-slate-500 font-semibold">Preguntas</div>
+                <div id="resStatTotal" class="text-xl font-black text-slate-900">20</div>
+              </div>
+              <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                <div class="text-xs text-emerald-700 font-semibold">Correctas</div>
+                <div id="resStatCorrect" class="text-xl font-black text-emerald-700">18</div>
+              </div>
+              <div class="bg-rose-50 p-3 rounded-xl border border-rose-200">
+                <div class="text-xs text-rose-700 font-semibold">Incorrectas</div>
+                <div id="resStatIncorrect" class="text-xl font-black text-rose-700">2</div>
+              </div>
+              <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-200">
+                <div class="text-xs text-indigo-700 font-semibold">Tiempo</div>
+                <div id="resStatTime" class="text-xl font-black text-indigo-700">04:12</div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-6 flex flex-wrap items-center justify-center gap-3">
+              <button type="button" onclick="resetExamToConfig()" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center gap-2">
+                <i class="fa-solid fa-arrows-rotate"></i> Configurar Nuevo Examen
+              </button>
+              <button type="button" onclick="restartCurrentExam()" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-md transition flex items-center gap-2">
+                <i class="fa-solid fa-repeat"></i> Reintentar Este Examen
+              </button>
+              <a href="#examDetailedReviewContainer" class="px-5 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs transition flex items-center gap-2">
+                <i class="fa-solid fa-list-check"></i> Ver Revisión Pregunta a Pregunta
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Question by Question Review -->
+        <div id="examDetailedReviewContainer" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+            <div>
+              <h4 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-clipboard-list text-indigo-600"></i> Revisión Completa y Justificación Teórica
+              </h4>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Explicación doctrinal, análisis del error y citas de mecanismos para cada una de las preguntas evaluadas.
+              </p>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              Revisión Académica
+            </span>
+          </div>
+
+          <!-- Review list injected dynamically -->
+          <div id="examReviewList" class="space-y-4">
+            <!-- Questions rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Cell Detail Modal (Interactive Reader) -->
@@ -487,6 +769,7 @@
 
   <!-- Scripts -->
   <script src="data.js"></script>
+  <script src="exam_questions.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -889,3 +889,4 @@ with open("static/data.js", "w", encoding="utf-8") as f:
     f.write(js_content)
 
 print("Generated exhaustive university database successfully in root and static!")
+
