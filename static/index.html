@@ -832,6 +832,52 @@
         </button>
       </div>
     </div>
+  <!-- Floating Audio Reader Bar (Text-to-Speech con Voz Femenina) -->
+  <div id="globalAudioPlayerBar" class="fixed bottom-5 left-1/2 -translate-x-1/2 w-[95%] max-w-2xl bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-slate-700/80 z-50 transition-all duration-300 transform translate-y-36 opacity-0 pointer-events-none">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <!-- Info Left -->
+      <div class="flex items-center gap-3 w-full sm:w-auto overflow-hidden">
+        <div id="audioWaveIcon" class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-lg flex-shrink-0 animate-pulse">
+          <i class="fa-solid fa-microphone-lines"></i>
+        </div>
+        <div class="overflow-hidden">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+              <i class="fa-solid fa-venus text-[9px]"></i> Voz Femenina
+            </span>
+            <span id="audioPlayingTypeBadge" class="text-[10px] bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full font-bold">
+              Economista
+            </span>
+          </div>
+          <div id="audioPlayingTitle" class="text-xs sm:text-sm font-bold text-white truncate max-w-[220px] sm:max-w-xs mt-0.5">
+            Milton Friedman
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Right -->
+      <div class="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800">
+        <!-- Speed Buttons -->
+        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <span class="text-[10px] font-bold text-slate-400 px-1 hidden md:inline"><i class="fa-solid fa-gauge-high mr-1"></i>Velocidad:</span>
+          <button type="button" onclick="setAudioSpeed(0.85)" id="btnSpeed-0.85" class="speed-pill px-2 py-1 text-[11px] font-bold rounded-lg transition text-slate-300 hover:text-white">0.85x</button>
+          <button type="button" onclick="setAudioSpeed(1.0)" id="btnSpeed-1.0" class="speed-pill px-2 py-1 text-[11px] font-bold rounded-lg transition bg-amber-400 text-slate-950 shadow">1x</button>
+          <button type="button" onclick="setAudioSpeed(1.25)" id="btnSpeed-1.25" class="speed-pill px-2 py-1 text-[11px] font-bold rounded-lg transition text-slate-300 hover:text-white">1.25x</button>
+          <button type="button" onclick="setAudioSpeed(1.5)" id="btnSpeed-1.5" class="speed-pill px-2 py-1 text-[11px] font-bold rounded-lg transition text-slate-300 hover:text-white">1.5x</button>
+          <button type="button" onclick="setAudioSpeed(1.75)" id="btnSpeed-1.75" class="speed-pill px-2 py-1 text-[11px] font-bold rounded-lg transition text-slate-300 hover:text-white">1.75x</button>
+        </div>
+
+        <!-- Play / Pause / Stop -->
+        <div class="flex items-center gap-1.5">
+          <button type="button" id="btnAudioPauseResume" onclick="togglePauseResumeAudio()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition" title="Pausar / Reanudar">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <button type="button" onclick="stopAudioReader()" class="w-9 h-9 rounded-xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition shadow shadow-rose-600/30" title="Detener reproducción">
+            <i class="fa-solid fa-stop"></i>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Footer -->

@@ -19,6 +19,7 @@ function initApp() {
   renderDeepDive();
   initExamTab();
   initExamKeysTab();
+  initSpeechEngine();
 
   // Typeset math if MathJax is available
   if (window.MathJax && window.MathJax.typesetPromise) {
@@ -686,6 +687,9 @@ function renderEconomistsList(filterText = '') {
           <p class="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed">${e.context}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <button onclick="toggleAudioReader('economist', '${e.id}')" id="btnAudio-economist-${e.id}" class="text-xs bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1.5 btn-audio-card" title="Escuchar texto completo con voz femenina">
+            <i class="fa-solid fa-microphone-lines text-slate-950"></i> <span class="audio-label">Escuchar</span>
+          </button>
           <button onclick="launchExamForEconomist('${e.id}')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1.5">
             <i class="fa-solid fa-graduation-cap text-amber-300"></i> Rendir Examen (20 Preguntas)
           </button>
@@ -1782,7 +1786,10 @@ function renderExamKeys(list = null) {
                 ${k.topic_name}
               </span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="toggleAudioReader('exam_key', '${k.id}')" id="btnAudio-exam_key-${k.id}" class="text-xs bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1.5 btn-audio-card" title="Escuchar clave de examen con voz femenina">
+                <i class="fa-solid fa-microphone-lines text-slate-950"></i> <span class="audio-label">Escuchar Clave</span>
+              </button>
               <button onclick="launchExamForEconomist('${k.economist_id}')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1.5">
                 <i class="fa-solid fa-graduation-cap text-amber-300"></i> Rendir Examen (20 Preguntas)
               </button>
@@ -1884,7 +1891,10 @@ function renderExamKeys(list = null) {
           <div class="text-xs text-slate-500 font-medium">
             <i class="fa-solid fa-circle-info text-indigo-600 mr-1"></i> Prepara esta clave para preguntas a desarrollar y multiple choice.
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="toggleAudioReader('exam_key', '${k.id}')" class="px-3.5 py-2 bg-amber-400 hover:bg-amber-500 text-slate-950 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm" title="Escuchar explicación con voz femenina">
+              <i class="fa-solid fa-microphone-lines"></i> Escuchar Explicación
+            </button>
             <button onclick="launchExamForEconomist('${k.economist_id}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
               <i class="fa-solid fa-play"></i> Practicar este Autor en Examen
             </button>
@@ -1898,5 +1908,377 @@ function renderExamKeys(list = null) {
 
   if (window.MathJax && window.MathJax.typesetPromise) {
     window.MathJax.typesetPromise();
+  }
+}
+
+// ====================================================
+// MOTOR DE AUDIO TEXT-TO-SPEECH (VOZ FEMENINA & VELOCIDAD)
+// ====================================================
+
+let audioPlayerState = {
+  activeType: null,      // 'economist' | 'exam_key'
+  activeId: null,        // 'friedman' | 'clave_1_friedman_inflacion'
+  chunks: [],
+  currentChunkIndex: 0,
+  isPlaying: false,
+  isPaused: false,
+  speed: 1.0,
+  voice: null,
+  title: '',
+  typeLabel: ''
+};
+
+function initSpeechEngine() {
+  if (!('speechSynthesis' in window)) {
+    console.warn('Web Speech API no está soportada en este navegador.');
+    return;
+  }
+
+  const loadVoices = () => {
+    audioPlayerState.voice = getFemaleSpanishVoice();
+  };
+
+  loadVoices();
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+}
+
+function getFemaleSpanishVoice() {
+  const synth = window.speechSynthesis;
+  if (!synth) return null;
+  const voices = synth.getVoices();
+  if (!voices || voices.length === 0) return null;
+
+  // Filter for Spanish voices
+  const spanishVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('es'));
+  if (spanishVoices.length === 0) return voices[0];
+
+  const femaleKeywords = [
+    'helena', 'sabina', 'laura', 'monica', 'mónica', 'paulina', 
+    'francisca', 'penelope', 'penélope', 'elena', 'lucia', 'lucía', 
+    'mia', 'mía', 'hilda', 'carmen', 'paloma', 'maria', 'maría', 
+    'sofia', 'sofía', 'rosa', 'victoria', 'female', 'mujer', 'zira'
+  ];
+
+  for (const v of spanishVoices) {
+    const nameLower = v.name.toLowerCase();
+    if (femaleKeywords.some(kw => nameLower.includes(kw))) {
+      return v;
+    }
+  }
+
+  // Look for Google español
+  const googleVoice = spanishVoices.find(v => v.name.toLowerCase().includes('google'));
+  if (googleVoice) return googleVoice;
+
+  // Fallback to first Spanish voice
+  return spanishVoices[0];
+}
+
+function cleanMathForSpeech(text) {
+  if (!text) return '';
+  return text
+    .replace(/\\\(/g, '')
+    .replace(/\\\)/g, '')
+    .replace(/\\\[/g, '')
+    .replace(/\\\]/g, '')
+    .replace(/\\pi\^?\*?/g, ' pi ')
+    .replace(/\\alpha/g, ' alfa ')
+    .replace(/\\beta/g, ' beta ')
+    .replace(/\\omega/g, ' omega ')
+    .replace(/\\mu/g, ' mu ')
+    .replace(/\\varepsilon/g, ' épsilon ')
+    .replace(/\\Delta/g, ' variación de ')
+    .replace(/\\dot\{P\}/g, ' tasa de inflación ')
+    .replace(/\\dot\{M\}/g, ' crecimiento monetario ')
+    .replace(/\\dot\{V\}/g, ' variación de velocidad ')
+    .replace(/\\dot\{Y\}/g, ' crecimiento del producto ')
+    .replace(/\\approx/g, ' aproximadamente igual a ')
+    .replace(/\\neq/g, ' distinto de ')
+    .replace(/\\to/g, ' tiende a ')
+    .replace(/\\implies/g, ' lo que implica que ')
+    .replace(/\\uparrow/g, ' sube ')
+    .replace(/\\downarrow/g, ' baja ')
+    .replace(/\\partial/g, ' derivada parcial de ')
+    .replace(/1\/\\alpha/g, ' uno sobre alfa ')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 sobre $2')
+    .replace(/M\/P/g, ' saldos reales M sobre P ')
+    .replace(/Y_p/g, ' ingreso permanente ')
+    .replace(/M_1/g, ' M uno ')
+    .replace(/M_2/g, ' M dos ')
+    .replace(/[*_#`]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function splitTextIntoSentenceChunks(text) {
+  const rawSentences = text
+    .replace(/([.?!;])\s+/g, '$1|')
+    .replace(/\n+/g, '|')
+    .split('|');
+
+  const chunks = [];
+  let current = '';
+
+  for (const s of rawSentences) {
+    const trimmed = s.trim();
+    if (!trimmed) continue;
+    if (current.length + trimmed.length < 220) {
+      current += (current ? ' ' : '') + trimmed;
+    } else {
+      if (current) chunks.push(current);
+      current = trimmed;
+    }
+  }
+  if (current) chunks.push(current);
+
+  return chunks;
+}
+
+function buildEconomistAudioScript(econId) {
+  const econ = window.BANKING_DATA?.economists.find(e => e.id === econId);
+  if (!econ) return null;
+
+  let text = `Economista: ${econ.name}. `;
+  text += `Escuela: ${econ.school}. `;
+  text += `Época: ${econ.epoch}. `;
+  text += `Contexto: ${cleanMathForSpeech(econ.context)}. `;
+
+  if (econ.primary_texts && econ.primary_texts.length > 0) {
+    text += `Textos analizados de la cátedra: ${econ.primary_texts.join(', ')}. `;
+  }
+
+  text += `A continuación, las posturas teóricas de ${econ.name} para el examen universitario. `;
+
+  window.BANKING_DATA.topics.forEach(t => {
+    const stance = econ.stances[t.id] || '';
+    if (!stance.includes('[No aborda')) {
+      text += `Sobre ${t.name}: ${cleanMathForSpeech(stance)}. `;
+    }
+  });
+
+  text += `Fin de la exposición completa de ${econ.name}.`;
+  return { title: econ.name, typeLabel: 'Economista', text };
+}
+
+function buildExamKeyAudioScript(keyId) {
+  const k = window.BANKING_DATA?.exam_keys.find(item => item.id === keyId);
+  if (!k) return null;
+
+  let text = `Clave número ${k.number} para el examen universitario. `;
+  text += `Título: ${k.title}. `;
+  text += `Economista: ${k.economist_name}. Escuela: ${k.school}. `;
+  text += `Eje temático: ${k.topic_name}. `;
+  text += `Tesis central: ${cleanMathForSpeech(k.the_key)}. `;
+  text += `¿Por qué es clave para el examen?: ${cleanMathForSpeech(k.why_is_key)}. `;
+  text += `Atención, trampa habitual en los exámenes: ${cleanMathForSpeech(k.typical_exam_trap)}. `;
+  text += `Respuesta de nivel diez universitario esperada por la cátedra: ${cleanMathForSpeech(k.university_answer)}. `;
+  text += `Mecanismo analítico y deducción formal: ${cleanMathForSpeech(k.theoretical_mechanism)}. `;
+  text += `Contraste doctrinal obligatorio: ${cleanMathForSpeech(k.doctrinal_contrast)}. `;
+  text += `Fin de la clave número ${k.number}.`;
+
+  return { title: `Clave #${k.number}: ${k.economist_name}`, typeLabel: 'Clave de Examen', text };
+}
+
+function toggleAudioReader(type, id) {
+  if (!('speechSynthesis' in window)) {
+    alert('Tu navegador no soporta síntesis de voz (Text-to-Speech). Se recomienda usar Google Chrome, Microsoft Edge o Safari.');
+    return;
+  }
+
+  // If already playing this item, stop it
+  if (audioPlayerState.isPlaying && audioPlayerState.activeType === type && audioPlayerState.activeId === id) {
+    stopAudioReader();
+    return;
+  }
+
+  // Otherwise, start playing this item
+  startAudioReader(type, id);
+}
+
+function startAudioReader(type, id) {
+  stopAudioReader(); // Cancel any existing speech
+
+  let scriptData = null;
+  if (type === 'economist') {
+    scriptData = buildEconomistAudioScript(id);
+  } else if (type === 'exam_key') {
+    scriptData = buildExamKeyAudioScript(id);
+  }
+
+  if (!scriptData || !scriptData.text) return;
+
+  const chunks = splitTextIntoSentenceChunks(scriptData.text);
+  if (chunks.length === 0) return;
+
+  if (!audioPlayerState.voice) {
+    audioPlayerState.voice = getFemaleSpanishVoice();
+  }
+
+  audioPlayerState.activeType = type;
+  audioPlayerState.activeId = id;
+  audioPlayerState.chunks = chunks;
+  audioPlayerState.currentChunkIndex = 0;
+  audioPlayerState.isPlaying = true;
+  audioPlayerState.isPaused = false;
+  audioPlayerState.title = scriptData.title;
+  audioPlayerState.typeLabel = scriptData.typeLabel;
+
+  // Show floating audio bar
+  showAudioPlayerBar(scriptData.title, scriptData.typeLabel);
+
+  // Update card buttons
+  updateCardAudioButtons();
+
+  // Start speech
+  playCurrentAudioChunk();
+}
+
+function playCurrentAudioChunk() {
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+
+  // Check if finished
+  if (audioPlayerState.currentChunkIndex >= audioPlayerState.chunks.length) {
+    stopAudioReader();
+    return;
+  }
+
+  const chunkText = audioPlayerState.chunks[audioPlayerState.currentChunkIndex];
+  const utterance = new SpeechSynthesisUtterance(chunkText);
+
+  if (audioPlayerState.voice) {
+    utterance.voice = audioPlayerState.voice;
+  }
+  utterance.lang = 'es-ES';
+  utterance.pitch = 1.15; // Feminine pitch
+  utterance.rate = audioPlayerState.speed || 1.0;
+
+  utterance.onend = () => {
+    if (audioPlayerState.isPlaying && !audioPlayerState.isPaused) {
+      audioPlayerState.currentChunkIndex++;
+      playCurrentAudioChunk();
+    }
+  };
+
+  utterance.onerror = (e) => {
+    console.warn('Utterance error:', e);
+    if (audioPlayerState.isPlaying && !audioPlayerState.isPaused) {
+      audioPlayerState.currentChunkIndex++;
+      playCurrentAudioChunk();
+    }
+  };
+
+  synth.speak(utterance);
+}
+
+function togglePauseResumeAudio() {
+  const synth = window.speechSynthesis;
+  if (!synth || !audioPlayerState.isPlaying) return;
+
+  const btn = document.getElementById('btnAudioPauseResume');
+
+  if (audioPlayerState.isPaused) {
+    synth.resume();
+    audioPlayerState.isPaused = false;
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    document.getElementById('audioWaveIcon')?.classList.add('animate-pulse');
+  } else {
+    synth.pause();
+    audioPlayerState.isPaused = true;
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    document.getElementById('audioWaveIcon')?.classList.remove('animate-pulse');
+  }
+}
+
+function stopAudioReader() {
+  const synth = window.speechSynthesis;
+  if (synth) synth.cancel();
+
+  audioPlayerState.isPlaying = false;
+  audioPlayerState.isPaused = false;
+  audioPlayerState.activeType = null;
+  audioPlayerState.activeId = null;
+  audioPlayerState.chunks = [];
+  audioPlayerState.currentChunkIndex = 0;
+
+  hideAudioPlayerBar();
+  updateCardAudioButtons();
+}
+
+function setAudioSpeed(newSpeed) {
+  audioPlayerState.speed = newSpeed;
+
+  // Update pills styling
+  document.querySelectorAll('.speed-pill').forEach(btn => {
+    btn.classList.remove('bg-amber-400', 'text-slate-950', 'shadow');
+    btn.classList.add('text-slate-300');
+  });
+
+  const activeBtn = document.getElementById(`btnSpeed-${newSpeed}`);
+  if (activeBtn) {
+    activeBtn.classList.remove('text-slate-300');
+    activeBtn.classList.add('bg-amber-400', 'text-slate-950', 'shadow');
+  }
+
+  // If currently speaking, restart current chunk with new speed seamlessly
+  if (audioPlayerState.isPlaying && !audioPlayerState.isPaused) {
+    const synth = window.speechSynthesis;
+    if (synth) {
+      synth.cancel();
+      playCurrentAudioChunk();
+    }
+  }
+}
+
+function showAudioPlayerBar(title, typeLabel) {
+  const bar = document.getElementById('globalAudioPlayerBar');
+  if (!bar) return;
+
+  document.getElementById('audioPlayingTitle').textContent = title;
+  document.getElementById('audioPlayingTypeBadge').textContent = typeLabel;
+  document.getElementById('btnAudioPauseResume').innerHTML = '<i class="fa-solid fa-pause"></i>';
+  document.getElementById('audioWaveIcon')?.classList.add('animate-pulse');
+
+  bar.classList.remove('translate-y-36', 'opacity-0', 'pointer-events-none');
+  bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+}
+
+function hideAudioPlayerBar() {
+  const bar = document.getElementById('globalAudioPlayerBar');
+  if (!bar) return;
+
+  bar.classList.add('translate-y-36', 'opacity-0', 'pointer-events-none');
+  bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+}
+
+function updateCardAudioButtons() {
+  // Reset all audio buttons to default "Escuchar"
+  document.querySelectorAll('.btn-audio-card').forEach(btn => {
+    btn.classList.remove('bg-rose-600', 'hover:bg-rose-700', 'text-white');
+    btn.classList.add('bg-amber-400', 'hover:bg-amber-500', 'text-slate-950');
+    const label = btn.querySelector('.audio-label');
+    if (label) {
+      label.textContent = btn.id.includes('exam_key') ? 'Escuchar Clave' : 'Escuchar';
+    }
+    const icon = btn.querySelector('i');
+    if (icon) {
+      icon.className = 'fa-solid fa-microphone-lines text-slate-950';
+    }
+  });
+
+  // If currently playing, set active button to "Detener"
+  if (audioPlayerState.isPlaying && audioPlayerState.activeType && audioPlayerState.activeId) {
+    const activeBtnId = `btnAudio-${audioPlayerState.activeType}-${audioPlayerState.activeId}`;
+    const activeBtn = document.getElementById(activeBtnId);
+    if (activeBtn) {
+      activeBtn.classList.remove('bg-amber-400', 'hover:bg-amber-500', 'text-slate-950');
+      activeBtn.classList.add('bg-rose-600', 'hover:bg-rose-700', 'text-white');
+      const label = activeBtn.querySelector('.audio-label');
+      if (label) label.textContent = 'Detener';
+      const icon = activeBtn.querySelector('i');
+      if (icon) icon.className = 'fa-solid fa-stop text-white';
+    }
   }
 }
