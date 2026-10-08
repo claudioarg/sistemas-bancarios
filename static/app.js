@@ -1,7 +1,6 @@
 // app.js - Interactive application logic for Sistemas Bancarios y Teoría Monetaria
 
-let currentTab = 'tab-matriz';
-let isMatrixInverted = false; // false: Economists as rows, Topics as cols. true: Topics as rows, Economists as cols.
+let currentTab = 'tab-economistas';
 
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
@@ -13,11 +12,7 @@ function initApp() {
     return;
   }
 
-  // Populate filter dropdowns
-  populateMatrixFilters();
-
-  // Render all views
-  renderMatrix();
+  // Render views
   initFilterTab();
   renderEconomistsList();
   renderTextsList();
@@ -467,7 +462,7 @@ function renderSelectedTopicDetail() {
             </span>
           </div>
 
-          <div class="mt-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans">
+          <div class="mt-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line">
             ${item.stance}
           </div>
         </div>
@@ -654,19 +649,19 @@ function renderEconomistsList(filterText = '') {
       const stance = e.stances[t.id] || '[No aborda este tema puntualmente en los textos analizados]';
       const isExcluded = stance.includes('[No aborda este tema');
 
-      topicsHtml += `<div class="p-3.5 rounded-xl border ${isExcluded ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-indigo-50/40 border-indigo-100 text-slate-800'}">
-        <div class="flex items-center justify-between mb-1.5">
+      topicsHtml += `<div class="p-4 rounded-xl border ${isExcluded ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-indigo-50/30 border-indigo-100 text-slate-800 shadow-sm'}">
+        <div class="flex items-center justify-between mb-2 pb-1.5 border-b ${isExcluded ? 'border-slate-200' : 'border-indigo-100/70'}">
           <span class="font-bold text-xs ${isExcluded ? 'text-slate-600' : 'text-indigo-950'} flex items-center gap-1.5">
-            <i class="fa-solid ${isExcluded ? 'fa-minus text-slate-400' : 'fa-check text-emerald-600'} text-[10px]"></i>
+            <i class="fa-solid ${isExcluded ? 'fa-minus text-slate-400' : 'fa-graduation-cap text-indigo-600'} text-[11px]"></i>
             ${t.name}
           </span>
-          <span class="text-[10px] ${isExcluded ? 'text-slate-400 italic' : 'bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full'}">
-            ${isExcluded ? 'No abordado' : 'Abordado'}
+          <span class="text-[10px] ${isExcluded ? 'bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-medium' : 'bg-indigo-100 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full'}">
+            ${isExcluded ? 'No abordado' : 'Abordado para Examen'}
           </span>
         </div>
-        <p class="text-xs leading-relaxed ${isExcluded ? 'italic text-slate-500 text-[11px]' : ''}">
+        <div class="text-xs leading-relaxed whitespace-pre-line font-sans ${isExcluded ? 'italic text-slate-500 text-[11px]' : 'text-slate-800'}">
           ${stance}
-        </p>
+        </div>
       </div>`;
     });
     topicsHtml += '</div>';
@@ -925,7 +920,7 @@ function handleGlobalSearch(query) {
     window.BANKING_DATA.topics.forEach(t => {
       const stance = e.stances[t.id] || '';
       if (stance.toLowerCase().includes(q) && !stance.includes('[No aborda')) {
-        matches.push({ type: 'Postura', title: `${e.name} en ${t.name}`, subtitle: stance.substring(0, 110) + '...', tab: 'tab-matriz', econId: e.id, topicId: t.id });
+        matches.push({ type: 'Postura', title: `${e.name} en ${t.name}`, subtitle: stance.substring(0, 110) + '...', tab: 'tab-economistas', econId: e.id, topicId: t.id });
       }
     });
   });

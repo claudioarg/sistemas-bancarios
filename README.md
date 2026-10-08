@@ -22,22 +22,21 @@ O bien desde el panel de Render:
 
 ## 📚 Contenido de la Aplicación
 
-1. **Cuadro Comparativo Transversal (Matriz Interactiva)**:
-   - 13 Economistas/Escuelas vs. 8 Ejes Temáticos (104 celdas analíticas).
-   - Filtros por autor, por tema, inversión de ejes y modales de lectura en profundidad.
-   - Distinción explícita de temas no abordados puntualmente por cada autor.
+1. **Por Economista y Época (Vista Principal para Exámenes Universitarios)**:
+   - 13 Economistas y Escuelas de pensamiento situados en su contexto histórico.
+   - Tratados doctrinales exhaustivos para cada uno de los 8 ejes temáticos del programa.
+   - Fórmulas matemáticas deducidas (Fisher, Cambridge, Baumol-Tobin $\sqrt{2bY/2r}$, Friedman, Cagan, Curva de Laffer del señoreaje $\pi^*=1/\alpha$, McKinnon-Shaw, etc.).
+   - Mecanismos de transmisión paso a paso, refutaciones de teorías rivales y advertencias metodológicas clave para aprobar la evaluación.
+   - Señalización explícita y fundamentada de los temas no abordados puntualmente en los textos de la cátedra.
 
-2. **Explorador con Pestaña de Filtros (Autor / Tema)**:
-   - **Modo "¿De qué habla?"**: Selecciona un economista para ver todos los temas que aborda y aquellos que no tocó.
-   - **Modo "¿Quiénes hablan de eso?"**: Selecciona un tema para ver qué economistas lo debaten, sus posturas enfrentadas y quiénes no opinaron sobre él.
+2. **Explorador Cruzado con Filtros (Autor / Tema)**:
+   - **Modo "¿De qué habla?"**: Selecciona un economista para analizar en detalle sus posturas temáticas y ver qué temas no tocó.
+   - **Modo "¿Quiénes hablan de eso?"**: Selecciona un eje temático para contrastar a todos los economistas que debaten sobre él, sus tesis enfrentadas y quiénes quedan al margen.
 
-3. **Perfiles Doctrinales y Cronológicos**:
-   - Cada autor situado en su época histórica, escuela y contexto biográfico.
+3. **Resumen Exhaustivo de los 13 Textos**:
+   - Fichas analíticas completas con metadatos (páginas, año, categoría, archivo fuente del programa), tesis central y puntos clave.
 
-4. **Resumen Exhaustivo de los 13 Textos**:
-   - Fichas completas con metadatos (páginas, año, categoría, archivo fuente), tesis central y puntos clave.
-
-5. **Análisis y Filtro de Textos de Más de 40 Páginas**:
+4. **Análisis y Filtro de Textos de Más de 40 Páginas**:
    - **Facu 100: Milton Friedman – Metodología de la Economía Positiva (43 pág.)**: Se filtran los debates microeconómicos de los años 40 y se retiene el instrumentalismo positivo (*"como si"*), contrastado con Harry Johnson, Argandoña, Lucas y Shackle.
    - **Facu 97: Álvaro Chaves Barea – Demanda de Dinero (61 pág.)**: Se omiten 35+ páginas de tablas econométricas locales argentinas ARDL y se retiene la evolución cronológica y matemática (Fisher, Pigou, Keynes, Baumol-Tobin, Friedman, Cagan), articulada con Zuleta, Argandoña, Motyovszki y McKinnon.
 
@@ -51,3 +50,4 @@ Puedes ejecutar la aplicación en tu computadora localmente sin internet:
 python app.py
 ```
 Abre en tu navegador: [http://localhost:5000](http://localhost:5000) o haz doble clic en `index.html`.
+

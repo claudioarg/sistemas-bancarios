@@ -20,7 +20,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-20">
         <!-- Logo / Brand -->
-        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('tab-matriz')">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('tab-economistas')">
           <div class="w-12 h-12 bg-amber-400 rounded-xl flex items-center justify-center text-indigo-950 font-black text-2xl shadow-lg transform hover:scale-105 transition-transform">
             <i class="fa-solid fa-landmark"></i>
           </div>
@@ -29,20 +29,17 @@
               Sistemas Bancarios y Teoría Monetaria
               <span class="text-xs bg-amber-400 text-indigo-950 font-extrabold px-2 py-0.5 rounded-full uppercase">13 Textos</span>
             </h1>
-            <p class="text-xs text-indigo-200">Compendio Doctrinal, Matriz Comparativa y Resúmenes Críticos</p>
+            <p class="text-xs text-indigo-200">Compendio Doctrinal Exhaustivo para Evaluaciones Universitarias</p>
           </div>
         </div>
 
         <!-- Desktop Navigation Tabs -->
         <nav class="hidden md:flex space-x-1">
-          <button onclick="switchTab('tab-matriz')" id="nav-tab-matriz" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-800 text-amber-300 shadow">
-            <i class="fa-solid fa-table-cells"></i> Cuadro Comparativo
+          <button onclick="switchTab('tab-economistas')" id="nav-tab-economistas" class="nav-btn active px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-800 text-amber-300 shadow">
+            <i class="fa-solid fa-user-tie"></i> Por Economista y Época
           </button>
           <button onclick="switchTab('tab-filtro')" id="nav-tab-filtro" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
             <i class="fa-solid fa-sliders"></i> Filtrar (Autor / Tema)
-          </button>
-          <button onclick="switchTab('tab-economistas')" id="nav-tab-economistas" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
-            <i class="fa-solid fa-user-tie"></i> Por Economista y Época
           </button>
           <button onclick="switchTab('tab-textos')" id="nav-tab-textos" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
             <i class="fa-solid fa-book-open"></i> Resumen de Textos (13)
@@ -69,9 +66,8 @@
 
     <!-- Mobile Nav Bar -->
     <div class="md:hidden bg-indigo-950 border-t border-indigo-800 px-3 py-2 flex justify-around overflow-x-auto text-xs font-medium">
-      <button onclick="switchTab('tab-matriz')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap">Cuadro</button>
-      <button onclick="switchTab('tab-filtro')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap">Filtrar</button>
-      <button onclick="switchTab('tab-economistas')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">Autores</button>
+      <button onclick="switchTab('tab-economistas')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap">Por Economista</button>
+      <button onclick="switchTab('tab-filtro')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">Filtrar</button>
       <button onclick="switchTab('tab-textos')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">13 Textos</button>
       <button onclick="switchTab('tab-largos')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">&gt;40 Págs</button>
       <button onclick="switchTab('tab-render')" class="px-2 py-1.5 rounded text-emerald-400 font-bold whitespace-nowrap">Render</button>
@@ -103,7 +99,7 @@
           La Disputa por el Dinero, el Crédito y la Inflación
         </h2>
         <p class="mt-2 text-indigo-200 text-sm leading-relaxed">
-          Sistematización de los 13 textos del programa. Incluye la matriz cruzada de <strong>13 Economistas/Escuelas</strong> frente a <strong>8 Ejes Temáticos</strong>, los resúmenes exhaustivos de cada obra, el filtro crítico de textos de más de 40 páginas y la guía de publicación en Render.
+          Sistematización exhaustiva de los 13 textos del programa para evaluaciones universitarias. Análisis doctrinal detallado de <strong>13 Economistas/Escuelas</strong> frente a <strong>8 Ejes Temáticos</strong>, deducciones matemáticas, mecanismos de transmisión, resúmenes críticos de las obras y comparativa rigurosa de textos &gt;40 páginas.
         </p>
       </div>
       <!-- Stats Quick Bar -->
@@ -121,8 +117,8 @@
           <div class="text-xs text-indigo-200 font-medium">Ejes Temáticos</div>
         </div>
         <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-700/50 backdrop-blur">
-          <div class="text-2xl font-black text-pink-400">104</div>
-          <div class="text-xs text-indigo-200 font-medium">Celdas de Cruce</div>
+          <div class="text-2xl font-black text-pink-400">Examen</div>
+          <div class="text-xs text-indigo-200 font-medium">Nivel Universitario</div>
         </div>
       </div>
     </div>
@@ -132,60 +128,35 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <!-- ========================================== -->
-    <!-- TAB 1: CUADRO COMPARATIVO (MATRIZ INTERACTIVA) -->
+    <!-- TAB 1: POR ECONOMISTA Y ÉPOCA (VISTA PRINCIPAL) -->
     <!-- ========================================== -->
-    <div id="tab-matriz" class="tab-content">
-      <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-6">
-        <!-- Controls & Filters for Matrix -->
-        <div class="p-5 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-table-cells-large text-indigo-600"></i>
-              Cuadro Comparativo Transversal: Economista vs Tema
-            </h3>
-            <p class="text-xs text-slate-500 mt-1">
-              Visualiza con precisión qué sostuvo cada autor por tema o si <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">[No aborda el tema puntualmente]</span>. Haz clic en cualquier celda para expandir la lectura.
-            </p>
-          </div>
-
-          <!-- Filter Controls -->
-          <div class="flex flex-wrap items-center gap-2">
-            <select id="matrixFilterTopic" onchange="renderMatrix()" class="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="all">Todos los Temas (8)</option>
-              <!-- Will be populated dynamically -->
-            </select>
-            <select id="matrixFilterEconomist" onchange="renderMatrix()" class="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="all">Todos los Economistas (13)</option>
-              <!-- Will be populated dynamically -->
-            </select>
-            <button onclick="toggleMatrixView()" id="btnToggleAxis" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5" title="Invertir filas y columnas">
-              <i class="fa-solid fa-repeat"></i> Invertir Ejes
-            </button>
-          </div>
+    <div id="tab-economistas" class="tab-content">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-users text-indigo-600"></i>
+            Perfiles Doctrinales por Economista, Época y Postura Temática (Nivel Examen)
+          </h3>
+          <p class="text-xs text-slate-600 mt-1">
+            Cada pensador situado en su contexto histórico, con argumentación teórica profunda, fórmulas, mecanismos y distinciones rigurosas para rendir el examen universitario.
+          </p>
         </div>
-
-        <!-- Matrix Table Container -->
-        <div class="overflow-x-auto max-h-[750px] overflow-y-auto relative border-t border-slate-200">
-          <table class="w-full text-left border-collapse text-xs" id="comparativeTable">
-            <!-- Rendered by JS -->
-          </table>
+        <!-- Search within Economists -->
+        <div class="w-full sm:w-72">
+          <input type="text" id="econSearchInput" placeholder="Filtrar economistas o doctrinas..." 
+                 class="w-full text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                 oninput="filterEconomistsList(this.value)">
         </div>
+      </div>
 
-        <!-- Matrix Footer Info -->
-        <div class="p-4 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-          <div class="flex items-center gap-4">
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Aborda el tema en profundidad</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-300 inline-block"></span> No lo aborda puntualmente en el texto</span>
-          </div>
-          <div>
-            Tip: Pasa el cursor o presiona una celda para leer la síntesis completa y sus textos fuente.
-          </div>
-        </div>
+      <!-- Economists Cards Container -->
+      <div id="economistsListContainer" class="space-y-6">
+        <!-- Rendered by JS -->
       </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- TAB NUEVA: FILTRAR POR ECONOMISTA O TEMA -->
+    <!-- TAB 2: FILTRAR POR ECONOMISTA O TEMA -->
     <!-- ========================================== -->
     <div id="tab-filtro" class="tab-content hidden">
       <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-6">
@@ -264,34 +235,6 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB 2: POR ECONOMISTA Y ÉPOCA -->
-    <!-- ========================================== -->
-    <div id="tab-economistas" class="tab-content hidden">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-users text-indigo-600"></i>
-            Perfiles Doctrinales por Economista, Época y Postura Temática
-          </h3>
-          <p class="text-xs text-slate-600 mt-1">
-            Cada pensador situado en su contexto histórico, distinguiendo claramente los temas que trató de aquellos que no abordó puntualmente.
-          </p>
-        </div>
-        <!-- Search within Economists -->
-        <div class="w-full sm:w-72">
-          <input type="text" id="econSearchInput" placeholder="Filtrar economistas o doctrinas..." 
-                 class="w-full text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                 oninput="filterEconomistsList(this.value)">
-        </div>
-      </div>
-
-      <!-- Economists Cards Container -->
-      <div id="economistsListContainer" class="space-y-6">
-        <!-- Rendered by JS -->
       </div>
     </div>
 
