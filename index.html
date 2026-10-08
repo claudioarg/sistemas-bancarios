@@ -38,6 +38,9 @@
           <button onclick="switchTab('tab-economistas')" id="nav-tab-economistas" class="nav-btn active px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-800 text-amber-300 shadow">
             <i class="fa-solid fa-user-tie"></i> Por Economista y Época
           </button>
+          <button onclick="switchTab('tab-claves')" id="nav-tab-claves" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
+            <i class="fa-solid fa-key text-amber-400"></i> Claves para el Examen
+          </button>
           <button onclick="switchTab('tab-examenes')" id="nav-tab-examenes" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-100 hover:bg-indigo-800">
             <i class="fa-solid fa-graduation-cap text-amber-400"></i> Exámenes (Multiple Choice)
           </button>
@@ -70,6 +73,7 @@
     <!-- Mobile Nav Bar -->
     <div class="md:hidden bg-indigo-950 border-t border-indigo-800 px-3 py-2 flex justify-around overflow-x-auto text-xs font-medium">
       <button onclick="switchTab('tab-economistas')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap">Por Economista</button>
+      <button onclick="switchTab('tab-claves')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap"><i class="fa-solid fa-key mr-1"></i>Claves Examen</button>
       <button onclick="switchTab('tab-examenes')" class="px-2 py-1.5 rounded text-amber-300 font-bold whitespace-nowrap"><i class="fa-solid fa-graduation-cap mr-1"></i>Exámenes</button>
       <button onclick="switchTab('tab-filtro')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">Filtrar</button>
       <button onclick="switchTab('tab-textos')" class="px-2 py-1.5 rounded text-indigo-200 whitespace-nowrap">13 Textos</button>
@@ -156,6 +160,86 @@
       <!-- Economists Cards Container -->
       <div id="economistsListContainer" class="space-y-6">
         <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB: CLAVES PARA EL EXAMEN UNIVERSITARIO -->
+    <!-- ========================================== -->
+    <div id="tab-claves" class="tab-content hidden space-y-6">
+      <!-- Title & Banner -->
+      <div class="bg-gradient-to-r from-amber-950 via-indigo-950 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-amber-600/40 relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 text-amber-500/10 text-9xl pointer-events-none font-black select-none">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <div class="relative z-10 max-w-4xl">
+          <div class="inline-flex items-center gap-2 bg-amber-400 text-slate-950 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-3 shadow">
+            <i class="fa-solid fa-star"></i> Puntos Nodales de Evaluación
+          </div>
+          <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Claves Fundamentales para el Examen Universitario
+          </h3>
+          <p class="mt-2 text-amber-100 text-sm leading-relaxed">
+            Sistematización exhaustiva de los <strong>14 postulados teóricos, controversias doctrinales y deducciones matemáticas</strong> que definen la aprobación en las mesas de examen. Cada clave detalla la doctrina, <strong>por qué es clave para el examen</strong>, la <strong>trampa habitual</strong> que conduce al aplazo, y la <strong>respuesta de nivel 10</strong> esperada por la cátedra.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-4 text-xs font-medium text-amber-200">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-key text-amber-400"></i> 14 Claves Maestras</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-bullseye text-emerald-400"></i> Criterio Docente Explicado</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Trampas Frecuentes Desactivadas</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-award text-sky-400"></i> Respuestas de Nivel 10</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Text Search -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-1"></i> Buscar Concepto o Trampa
+            </label>
+            <input type="text" id="examKeysSearchInput" placeholder="Ej: Friedman, Cagan, Reflujo, Lucas, EFP, señoreaje..."
+                   class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none transition"
+                   oninput="filterExamKeys()">
+          </div>
+
+          <!-- Filter by Economist -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <i class="fa-solid fa-user-tie text-indigo-600 mr-1"></i> Filtrar por Economista
+            </label>
+            <select id="examKeysEconomistFilter" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none transition"
+                    onchange="filterExamKeys()">
+              <option value="all">🌟 Todos los Economistas (14 Claves)</option>
+              <!-- Filled dynamically by initExamKeysTab -->
+            </select>
+          </div>
+
+          <!-- Filter by Topic -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <i class="fa-solid fa-layer-group text-indigo-600 mr-1"></i> Filtrar por Eje Temático
+            </label>
+            <select id="examKeysTopicFilter" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none transition"
+                    onchange="filterExamKeys()">
+              <option value="all">🌟 Todos los Ejes Temáticos</option>
+              <!-- Filled dynamically by initExamKeysTab -->
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span id="examKeysCounterText" class="font-semibold text-slate-700">Mostrando 14 de 14 Claves de Examen</span>
+          <button type="button" onclick="resetExamKeysFilters()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold transition flex items-center gap-1">
+            <i class="fa-solid fa-arrows-rotate"></i> Restablecer Filtros
+          </button>
+        </div>
+      </div>
+
+      <!-- Claves Cards Container -->
+      <div id="examKeysContainer" class="space-y-6">
+        <!-- Rendered dynamically by app.js -->
       </div>
     </div>
 

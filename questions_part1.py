@@ -1242,3 +1242,4 @@ bank_part1["olivera_canavese"] = [
 ]
 
 print(f"Cargadas las 100 preguntas de la Parte 1 (Bernanke, Currency, Banking, McKinnon, Olivera).")
+

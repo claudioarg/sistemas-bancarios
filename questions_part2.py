@@ -1242,3 +1242,4 @@ bank_part2["clasicos_poskeynesianos"] = [
 ]
 
 print(f"Cargadas las 100 preguntas de la Parte 2 (Werning, Shackle, Zuleta, Johnson, Clásicos-Poskeynesianos).")
+

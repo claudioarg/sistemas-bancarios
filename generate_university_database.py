@@ -859,6 +859,11 @@ with open("static/static_data.json", "r", encoding="utf-8") as f:
 
 texts_data = old_data["texts"]
 
+try:
+    from add_exam_keys_data import EXAM_KEYS
+except ImportError:
+    EXAM_KEYS = []
+
 final_output = {
     "metadata": {
         "title": "Compendio de Sistemas Bancarios y Teoría Monetaria",
@@ -866,12 +871,14 @@ final_output = {
         "generated_date": "Octubre 2026",
         "total_texts": 13,
         "total_economists": len(economists_data),
-        "total_topics": len(topics_data)
+        "total_topics": len(topics_data),
+        "total_exam_keys": len(EXAM_KEYS)
     },
     "topics": topics_data,
     "economists": economists_data,
     "texts": texts_data,
-    "deep_dive_over_40": deep_dive_data
+    "deep_dive_over_40": deep_dive_data,
+    "exam_keys": EXAM_KEYS
 }
 
 # Save in root and static

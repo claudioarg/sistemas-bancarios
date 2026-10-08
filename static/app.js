@@ -18,6 +18,7 @@ function initApp() {
   renderTextsList();
   renderDeepDive();
   initExamTab();
+  initExamKeysTab();
 
   // Typeset math if MathJax is available
   if (window.MathJax && window.MathJax.typesetPromise) {
@@ -936,6 +937,20 @@ function handleGlobalSearch(query) {
     }
   });
 
+  // Match exam keys
+  if (window.BANKING_DATA.exam_keys) {
+    window.BANKING_DATA.exam_keys.forEach(k => {
+      if (k.title.toLowerCase().includes(q) || k.economist_name.toLowerCase().includes(q) || k.why_is_key.toLowerCase().includes(q) || k.the_key.toLowerCase().includes(q)) {
+        matches.push({
+          type: 'Clave de Examen',
+          title: `#${k.number}: ${k.title}`,
+          subtitle: `${k.economist_name} (${k.school})`,
+          tab: 'tab-claves'
+        });
+      }
+    });
+  }
+
   if (matches.length === 0) {
     resultsBox.innerHTML = `No se encontraron coincidencias para "${query}".`;
     return;
@@ -1632,4 +1647,256 @@ function resetExamToConfig() {
 function restartCurrentExam() {
   // Restart with same questions or reshuffled
   startExamSession();
+}
+
+// ====================================================
+// TAB: CLAVES PARA EL EXAMEN UNIVERSITARIO
+// ====================================================
+
+function initExamKeysTab() {
+  if (!window.BANKING_DATA || !window.BANKING_DATA.exam_keys) {
+    console.warn('Exam keys data not loaded');
+    return;
+  }
+
+  const econSelect = document.getElementById('examKeysEconomistFilter');
+  if (econSelect) {
+    econSelect.innerHTML = '<option value="all">🌟 Todos los Economistas (14 Claves)</option>';
+    const seenEcons = new Set();
+    window.BANKING_DATA.exam_keys.forEach(k => {
+      if (!seenEcons.has(k.economist_id)) {
+        seenEcons.add(k.economist_id);
+        const opt = document.createElement('option');
+        opt.value = k.economist_id;
+        opt.textContent = `${k.economist_name} (${k.school})`;
+        econSelect.appendChild(opt);
+      }
+    });
+  }
+
+  const topicSelect = document.getElementById('examKeysTopicFilter');
+  if (topicSelect && window.BANKING_DATA.topics) {
+    topicSelect.innerHTML = '<option value="all">🌟 Todos los Ejes Temáticos</option>';
+    window.BANKING_DATA.topics.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      topicSelect.appendChild(opt);
+    });
+  }
+
+  renderExamKeys();
+}
+
+function filterExamKeys() {
+  const search = document.getElementById('examKeysSearchInput')?.value.toLowerCase().trim() || '';
+  const selectedEcon = document.getElementById('examKeysEconomistFilter')?.value || 'all';
+  const selectedTopic = document.getElementById('examKeysTopicFilter')?.value || 'all';
+
+  if (!window.BANKING_DATA || !window.BANKING_DATA.exam_keys) return;
+
+  const filtered = window.BANKING_DATA.exam_keys.filter(k => {
+    // Economist filter
+    if (selectedEcon !== 'all' && k.economist_id !== selectedEcon) return false;
+    // Topic filter
+    if (selectedTopic !== 'all' && k.topic_id !== selectedTopic) return false;
+    // Search text
+    if (search) {
+      const match = k.title.toLowerCase().includes(search) ||
+                    k.economist_name.toLowerCase().includes(search) ||
+                    k.school.toLowerCase().includes(search) ||
+                    k.the_key.toLowerCase().includes(search) ||
+                    k.why_is_key.toLowerCase().includes(search) ||
+                    k.typical_exam_trap.toLowerCase().includes(search) ||
+                    k.university_answer.toLowerCase().includes(search) ||
+                    k.theoretical_mechanism.toLowerCase().includes(search);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  renderExamKeys(filtered);
+}
+
+function resetExamKeysFilters() {
+  const searchInput = document.getElementById('examKeysSearchInput');
+  const econFilter = document.getElementById('examKeysEconomistFilter');
+  const topicFilter = document.getElementById('examKeysTopicFilter');
+
+  if (searchInput) searchInput.value = '';
+  if (econFilter) econFilter.value = 'all';
+  if (topicFilter) topicFilter.value = 'all';
+
+  renderExamKeys();
+}
+
+function renderExamKeys(list = null) {
+  const container = document.getElementById('examKeysContainer');
+  const counter = document.getElementById('examKeysCounterText');
+  if (!container) return;
+
+  const keys = list !== null ? list : (window.BANKING_DATA?.exam_keys || []);
+  const total = window.BANKING_DATA?.exam_keys?.length || 14;
+
+  if (counter) {
+    counter.textContent = `Mostrando ${keys.length} de ${total} Claves de Examen`;
+  }
+
+  if (keys.length === 0) {
+    container.innerHTML = `
+      <div class="bg-white p-12 rounded-2xl text-center text-slate-500 border border-slate-200">
+        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-300 mb-3 block"></i>
+        <h4 class="font-bold text-slate-800 text-base">No se encontraron claves con los filtros seleccionados</h4>
+        <p class="text-xs text-slate-500 mt-1">Prueba restableciendo los filtros o buscando con términos más amplios.</p>
+        <button onclick="resetExamKeysFilters()" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition">
+          Restablecer Filtros
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  keys.forEach(k => {
+    let sourceBadges = '';
+    k.source_texts.forEach(txt => {
+      sourceBadges += `<span class="bg-slate-100 text-slate-700 font-mono text-[11px] px-2.5 py-0.5 rounded border border-slate-200">${txt}</span>`;
+    });
+
+    html += `
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden card-hover transition-all">
+        <!-- Card Header -->
+        <div class="p-6 bg-slate-50 border-b border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow">
+                #${k.number}
+              </span>
+              <span class="bg-indigo-900 text-amber-300 px-3 py-1 rounded-full text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
+                <i class="fa-solid fa-user-tie text-[10px]"></i> ${k.economist_name}
+              </span>
+              <span class="bg-indigo-100 text-indigo-900 px-2.5 py-1 rounded-full text-xs font-semibold">
+                ${k.school}
+              </span>
+              <span class="bg-slate-200 text-slate-800 px-2.5 py-1 rounded-full text-xs font-medium">
+                ${k.topic_name}
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="launchExamForEconomist('${k.economist_id}')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1.5">
+                <i class="fa-solid fa-graduation-cap text-amber-300"></i> Rendir Examen (20 Preguntas)
+              </button>
+            </div>
+          </div>
+
+          <h4 class="text-lg sm:text-xl font-black text-indigo-950 leading-snug">
+            ${k.title}
+          </h4>
+
+          <div class="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+            <span class="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Fuentes Obligatorias:</span>
+            ${sourceBadges}
+          </div>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <!-- 1. Tesis / La Clave Doctrinal -->
+          <div class="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100">
+            <div class="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-indigo-950 mb-1.5">
+              <i class="fa-solid fa-quote-left text-indigo-600"></i>
+              La Tesis Central / Postulado Doctrinal:
+            </div>
+            <p class="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
+              ${k.the_key}
+            </p>
+          </div>
+
+          <!-- 2. ¿Por Qué es Clave para el Examen? -->
+          <div class="p-5 rounded-xl bg-amber-50/80 border-2 border-amber-300 text-xs sm:text-sm">
+            <div class="flex items-center gap-2 font-black text-amber-950 text-sm mb-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
+                <i class="fa-solid fa-bullseye"></i>
+              </span>
+              <span>¿Por Qué es Clave para el Examen? (Criterio de Evaluación Docente):</span>
+            </div>
+            <p class="text-slate-800 leading-relaxed font-sans">
+              ${k.why_is_key}
+            </p>
+          </div>
+
+          <!-- Grid: Trampa Habitual vs Respuesta de Nivel 10 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Trampa Habitual -->
+            <div class="p-5 rounded-xl bg-rose-50/70 border-2 border-rose-300 text-xs">
+              <div class="flex items-center gap-2 font-black text-rose-950 text-xs sm:text-sm mb-2">
+                <span class="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center text-xs shadow-xs">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                <span>⚠️ Trampa Habitual (Error Típico del Estudiante):</span>
+              </div>
+              <p class="text-slate-700 leading-relaxed font-sans">
+                ${k.typical_exam_trap}
+              </p>
+            </div>
+
+            <!-- Respuesta de Nivel 10 -->
+            <div class="p-5 rounded-xl bg-emerald-50/70 border-2 border-emerald-300 text-xs">
+              <div class="flex items-center gap-2 font-black text-emerald-950 text-xs sm:text-sm mb-2">
+                <span class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
+                  <i class="fa-solid fa-award"></i>
+                </span>
+                <span>🎓 Respuesta de Nivel 10 Universitario:</span>
+              </div>
+              <p class="text-slate-800 leading-relaxed font-sans font-medium">
+                ${k.university_answer}
+              </p>
+            </div>
+          </div>
+
+          <!-- 3. Mecanismo Analítico y Fórmulas -->
+          <div class="p-5 rounded-xl bg-slate-900 text-slate-100 text-xs">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2 font-bold text-amber-300 uppercase tracking-wider text-[11px]">
+                <i class="fa-solid fa-gears text-amber-400"></i>
+                Mecanismo Analítico y Deducción Formal / Fórmula:
+              </div>
+              <span class="text-[10px] text-slate-400 font-mono">Formalización de Cátedra</span>
+            </div>
+            <div class="leading-relaxed text-slate-200 font-mono text-xs sm:text-[13px] bg-slate-950/70 p-3.5 rounded-lg border border-slate-800">
+              ${k.theoretical_mechanism}
+            </div>
+          </div>
+
+          <!-- 4. Contraste Doctrinal Obligatorio -->
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-800 font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+              <i class="fa-solid fa-code-compare"></i>
+            </div>
+            <div>
+              <div class="font-bold text-indigo-950 mb-0.5">Contraste Doctrinal Obligatorio:</div>
+              <p class="text-slate-600 leading-relaxed">${k.doctrinal_contrast}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="text-xs text-slate-500 font-medium">
+            <i class="fa-solid fa-circle-info text-indigo-600 mr-1"></i> Prepara esta clave para preguntas a desarrollar y multiple choice.
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="launchExamForEconomist('${k.economist_id}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-play"></i> Practicar este Autor en Examen
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise();
+  }
 }
