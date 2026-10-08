@@ -2040,25 +2040,17 @@ function buildEconomistAudioScript(econId) {
   const econ = window.BANKING_DATA?.economists.find(e => e.id === econId);
   if (!econ) return null;
 
-  let text = `Economista: ${econ.name}. `;
-  text += `Escuela: ${econ.school}. `;
-  text += `Época: ${econ.epoch}. `;
-  text += `Contexto: ${cleanMathForSpeech(econ.context)}. `;
+  // Solo el nombre del economista (sin descripción, época, contexto ni textos)
+  let text = `${econ.name}. `;
 
-  if (econ.primary_texts && econ.primary_texts.length > 0) {
-    text += `Textos analizados de la cátedra: ${econ.primary_texts.join(', ')}. `;
-  }
-
-  text += `A continuación, las posturas teóricas de ${econ.name} para el examen universitario. `;
-
+  // Desglose directo de posturas por eje temático
   window.BANKING_DATA.topics.forEach(t => {
     const stance = econ.stances[t.id] || '';
     if (!stance.includes('[No aborda')) {
-      text += `Sobre ${t.name}: ${cleanMathForSpeech(stance)}. `;
+      text += `${t.name}: ${cleanMathForSpeech(stance)}. `;
     }
   });
 
-  text += `Fin de la exposición completa de ${econ.name}.`;
   return { title: econ.name, typeLabel: 'Economista', text };
 }
 
@@ -2066,17 +2058,16 @@ function buildExamKeyAudioScript(keyId) {
   const k = window.BANKING_DATA?.exam_keys.find(item => item.id === keyId);
   if (!k) return null;
 
-  let text = `Clave número ${k.number} para el examen universitario. `;
-  text += `Título: ${k.title}. `;
-  text += `Economista: ${k.economist_name}. Escuela: ${k.school}. `;
-  text += `Eje temático: ${k.topic_name}. `;
+  // Solo el nombre del autor y el título de la clave (sin descripciones accesorias)
+  let text = `${k.economist_name}. ${k.title}. `;
+
+  // Desglose directo de los puntos de la clave
   text += `Tesis central: ${cleanMathForSpeech(k.the_key)}. `;
   text += `¿Por qué es clave para el examen?: ${cleanMathForSpeech(k.why_is_key)}. `;
-  text += `Atención, trampa habitual en los exámenes: ${cleanMathForSpeech(k.typical_exam_trap)}. `;
-  text += `Respuesta de nivel diez universitario esperada por la cátedra: ${cleanMathForSpeech(k.university_answer)}. `;
-  text += `Mecanismo analítico y deducción formal: ${cleanMathForSpeech(k.theoretical_mechanism)}. `;
-  text += `Contraste doctrinal obligatorio: ${cleanMathForSpeech(k.doctrinal_contrast)}. `;
-  text += `Fin de la clave número ${k.number}.`;
+  text += `Trampa habitual: ${cleanMathForSpeech(k.typical_exam_trap)}. `;
+  text += `Respuesta de nivel diez: ${cleanMathForSpeech(k.university_answer)}. `;
+  text += `Mecanismo analítico: ${cleanMathForSpeech(k.theoretical_mechanism)}. `;
+  text += `Contraste doctrinal: ${cleanMathForSpeech(k.doctrinal_contrast)}. `;
 
   return { title: `Clave #${k.number}: ${k.economist_name}`, typeLabel: 'Clave de Examen', text };
 }
